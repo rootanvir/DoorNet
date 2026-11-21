@@ -13,7 +13,6 @@ public sealed record ConnectionRow(
     Brush StateBrush,
     ImageSource? Icon,
     string? ExecutablePath,
-    bool IsBlocked,
     string Tooltip)
 {
     public static readonly Brush LiveBrush = Frozen("#35E08E");
@@ -47,7 +46,6 @@ public sealed record AppRow(
     bool UploadIdle,
     bool ShowMeters,
     string? ExecutablePath,
-    bool IsBlocked,
     bool InBlocked,
     bool OutBlocked,
     string Tooltip)

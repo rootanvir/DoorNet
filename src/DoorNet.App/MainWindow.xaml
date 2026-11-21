@@ -421,25 +421,10 @@
                                                     </Border>
 
                                                     <StackPanel Grid.Column="1" Margin="0,0,8,0" VerticalAlignment="Center">
-                                                        <Grid>
-                                                            <Grid.ColumnDefinitions>
-                                                                <ColumnDefinition Width="*" />
-                                                                <ColumnDefinition Width="Auto" />
-                                                            </Grid.ColumnDefinitions>
-                                                            <TextBlock Text="{Binding Name}"
-                                                                       FontSize="12.5"
-                                                                       Foreground="{DynamicResource TextPrimaryBrush}"
-                                                                       TextTrimming="CharacterEllipsis" />
-                                                            <TextBlock Grid.Column="1"
-                                                                       Text="&#xE72E;"
-                                                                       FontFamily="{StaticResource GlyphFont}"
-                                                                       FontSize="10"
-                                                                       Foreground="{DynamicResource DangerBrush}"
-                                                                       Margin="6,0,0,0"
-                                                                       VerticalAlignment="Center"
-                                                                       ToolTip="Internet access blocked"
-                                                                       Visibility="{Binding IsBlocked, Converter={StaticResource BoolToVis}}" />
-                                                        </Grid>
+                                                        <TextBlock Text="{Binding Name}"
+                                                                   FontSize="12.5"
+                                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                                   TextTrimming="CharacterEllipsis" />
                                                         <TextBlock Text="{Binding DetailText}"
                                                                    Style="{StaticResource Caption}"
                                                                    Margin="0,2,0,0"
@@ -648,14 +633,6 @@
                                                        RenderOptions.BitmapScalingMode="HighQuality" />
                                                 <TextBlock Text="{Binding ProcessName}"
                                                            Style="{StaticResource CellTextStrong}" />
-                                                <TextBlock Text="&#xE72E;"
-                                                           FontFamily="{StaticResource GlyphFont}"
-                                                           FontSize="9"
-                                                           Foreground="{DynamicResource DangerBrush}"
-                                                           Margin="6,0,0,0"
-                                                           VerticalAlignment="Center"
-                                                           ToolTip="Internet access blocked"
-                                                           Visibility="{Binding IsBlocked, Converter={StaticResource BoolToVis}}" />
                                             </StackPanel>
                                         </DataTemplate>
                                     </DataGridTemplateColumn.CellTemplate>

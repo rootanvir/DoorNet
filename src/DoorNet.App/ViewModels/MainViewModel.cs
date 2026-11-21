@@ -342,7 +342,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             BrushForState(connection.State),
             AppIcons.ForProcess(connection.ExecutablePath, connection.ProcessName),
             connection.ExecutablePath,
-            _firewall.IsBlocked(connection.ExecutablePath),
             TooltipFor(connection.ExecutablePath, connection.ProcessId));
 
     private static string TooltipFor(string? executablePath, int processId) =>
@@ -396,7 +395,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             uploadIdle,
             showMeters,
             app.ExecutablePath,
-            _firewall.IsBlocked(app.ExecutablePath),
             _firewall.IsBlocked(app.ExecutablePath, FirewallDirection.In),
             _firewall.IsBlocked(app.ExecutablePath, FirewallDirection.Out),
             TooltipFor(app.ExecutablePath, app.ProcessId));
