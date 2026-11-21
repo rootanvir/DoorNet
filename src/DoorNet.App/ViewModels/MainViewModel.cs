@@ -368,15 +368,22 @@ public sealed class MainViewModel : ObservableObject, IDisposable
                 ? "No active outbound sockets"
                 : "Traffic only · sockets closed";
 
-        var connectionsText = app.ConnectionCount switch
-        {
-            0 => "no sockets",
-            1 => "1 socket",
-            _ => $"{app.ConnectionCount} sockets"
-        };
+        var downloadIdle = showMeters && downloadRate < 1;
+        var uploadIdle = showMeters && uploadRate < 1;
 
-        var downloadIdle = downloadRate < 1;
-        var uploadIdle = uploadRate < 1;
+        var downloadText = !showMeters
+            ? "—"
+            : downloadIdle ? "0" : ByteFormatter.FormatRate(downloadRate);
+
+        var uploadText = !showMeters
+            ? "—"
+            : uploadIdle ? "0" : ByteFormatter.FormatRate(uploadRate);
+
+        var totalText = showMeters ? ByteFormatter.FormatBytes(totalDownload + totalUpload) : "—";
+
+        var totalTooltip = showMeters
+            ? $"Downloaded {ByteFormatter.FormatBytes(totalDownload)}  ·  Uploaded {ByteFormatter.FormatBytes(totalUpload)}"
+            : "Per-app totals need administrator rights.";
 
         return new AppRow(
             app.ProcessId,
@@ -384,19 +391,16 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             app.Initial,
             AccentPalette.For(app.ProcessName),
             AppIcons.ForProcess(app.ExecutablePath, app.ProcessName),
-            connectionsText,
             detail,
-            downloadIdle ? "0" : ByteFormatter.FormatRate(downloadRate),
-            uploadIdle ? "0" : ByteFormatter.FormatRate(uploadRate),
-            showMeters ? ByteFormatter.FormatBytes(totalDownload) : string.Empty,
-            showMeters ? ByteFormatter.FormatBytes(totalUpload) : string.Empty,
+            downloadText,
+            uploadText,
+            totalText,
+            totalTooltip,
             MeterMath.Scale(downloadRate, maxDownload),
             MeterMath.Scale(uploadRate, maxUpload),
             downloadIdle,
             uploadIdle,
             showMeters,
-            !showMeters,
-            active > 0,
             app.ExecutablePath,
             _firewall.IsBlocked(app.ExecutablePath),
             TooltipFor(app.ExecutablePath, app.ProcessId));

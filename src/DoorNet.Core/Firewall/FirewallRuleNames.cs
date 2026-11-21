@@ -3,16 +3,31 @@ using System.Text;
 
 namespace DoorNet.Core.Firewall;
 
+public enum FirewallDirection
+{
+    In,
+    Out
+}
+
 /// <summary>
-/// Deterministic names for the firewall rules DoorNet owns. The path hash keeps rules for
-/// two executables with the same file name apart, and lets us find/remove our own rules
-/// without enumerating (and without colliding with rules the user created).
+/// Deterministic names for the firewall rules DoorNet owns. Each blocked application gets
+/// one inbound and one outbound rule; the path hash keeps rules for two executables with
+/// the same file name apart, and lets us find/remove our own rules without enumerating.
 /// </summary>
 public static class FirewallRuleNames
 {
     public const string Group = "DoorNet";
 
-    public static string ForPath(string executablePath)
+    public static string ForPath(string executablePath, FirewallDirection direction)
+    {
+        var suffix = direction == FirewallDirection.Out ? "out" : "in";
+        return $"{BaseName(executablePath)} {suffix}";
+    }
+
+    /// <summary>Name used before per-direction rules existed; removed on upgrade.</summary>
+    public static string ForPath(string executablePath) => BaseName(executablePath);
+
+    private static string BaseName(string executablePath)
     {
         var trimmed = executablePath.Trim();
         var normalized = trimmed.ToLowerInvariant();

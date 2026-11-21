@@ -32,26 +32,23 @@ public sealed record ConnectionRow(
     }
 }
 
-/// <summary>A flat row for the per-application list.</summary>
+/// <summary>A flat row for the per-application table.</summary>
 public sealed record AppRow(
     int ProcessId,
     string Name,
     string Initial,
     Brush Accent,
     ImageSource? Icon,
-    string ConnectionsText,
     string DetailText,
     string DownloadText,
     string UploadText,
-    string DownloadTotalText,
-    string UploadTotalText,
+    string TotalText,
+    string TotalTooltip,
     double DownloadScale,
     double UploadScale,
     bool DownloadIdle,
     bool UploadIdle,
-    bool ShowMeters,
-    bool ShowSockets,
-    bool IsActive,
+    bool HasMeters,
     string? ExecutablePath,
     bool IsBlocked,
     string Tooltip)

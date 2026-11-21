@@ -18,10 +18,14 @@ public sealed class WindowsFirewallController : IFirewallController
     private const string PolicyProgId = "HNetCfg.FwPolicy2";
     private const string RuleProgId = "HNetCfg.FwRule";
 
+    private const int RuleDirectionIn = 1;
     private const int RuleDirectionOut = 2;
     private const int RuleActionBlock = 0;
     private const int ProtocolAny = 256;
     private const int ProfileAll = int.MaxValue;
+
+    private static readonly FirewallDirection[] BothDirections =
+        [FirewallDirection.Out, FirewallDirection.In];
 
     private readonly object _sync = new();
     private readonly HashSet<string> _blocked = new(StringComparer.OrdinalIgnoreCase);
@@ -91,12 +95,15 @@ public sealed class WindowsFirewallController : IFirewallController
 
                 foreach (var path in _blocked)
                 {
-                    var name = FirewallRuleNames.ForPath(path);
-                    if (!RuleExists(Rules, name))
-                        continue;
+                    foreach (var direction in BothDirections)
+                    {
+                        var name = FirewallRuleNames.ForPath(path, direction);
+                        if (!RuleExists(Rules, name))
+                            continue;
 
-                    dynamic rule = Rules.Item(name);
-                    rule.Enabled = enabled;
+                        dynamic rule = Rules.Item(name);
+                        rule.Enabled = enabled;
+                    }
                 }
 
                 SaveState();
@@ -137,28 +144,13 @@ public sealed class WindowsFirewallController : IFirewallController
             try
             {
                 var rules = Rules;
-                var name = FirewallRuleNames.ForPath(path);
 
-                if (!RuleExists(rules, name))
-                {
-                    dynamic rule = Activator.CreateInstance(Type.GetTypeFromProgID(RuleProgId)!)!;
-                    rule.Name = name;
-                    rule.Description = "Blocked by DoorNet";
-                    rule.Grouping = FirewallRuleNames.Group;
-                    rule.Direction = RuleDirectionOut;
-                    rule.Action = RuleActionBlock;
-                    rule.Enabled = _enabled;
-                    rule.InterfaceTypes = "All";
-                    rule.Profiles = ProfileAll;
-                    rule.Protocol = ProtocolAny;
-                    rule.ApplicationName = path;
-
-                    rules.Add(rule);
-                }
+                EnsureRule(rules, path, FirewallDirection.Out);
+                EnsureRule(rules, path, FirewallDirection.In);
 
                 _blocked.Add(path);
                 SaveState();
-                return FirewallChangeResult.Ok($"Blocked internet access for {Path.GetFileName(path)}.");
+                return FirewallChangeResult.Ok($"Blocked internet access for {Path.GetFileName(path)} (inbound and outbound).");
             }
             catch (Exception ex)
             {
@@ -180,9 +172,9 @@ public sealed class WindowsFirewallController : IFirewallController
         {
             try
             {
-                var name = FirewallRuleNames.ForPath(path);
-                if (RuleExists(Rules, name))
-                    Rules.Remove(name);
+                RemoveRule(Rules, FirewallRuleNames.ForPath(path, FirewallDirection.Out));
+                RemoveRule(Rules, FirewallRuleNames.ForPath(path, FirewallDirection.In));
+                RemoveRule(Rules, FirewallRuleNames.ForPath(path));
 
                 _blocked.Remove(path);
                 SaveState();
@@ -221,10 +213,37 @@ public sealed class WindowsFirewallController : IFirewallController
             _ = rules.Item(name);
             return true;
         }
-            catch (Exception ex) when (ex is not OutOfMemoryException)
+        catch (Exception ex) when (ex is not OutOfMemoryException)
         {
             return false;
         }
+    }
+
+    private void EnsureRule(dynamic rules, string path, FirewallDirection direction)
+    {
+        var name = FirewallRuleNames.ForPath(path, direction);
+        if (RuleExists(rules, name))
+            return;
+
+        dynamic rule = Activator.CreateInstance(Type.GetTypeFromProgID(RuleProgId)!)!;
+        rule.Name = name;
+        rule.Description = "Blocked by DoorNet";
+        rule.Grouping = FirewallRuleNames.Group;
+        rule.Direction = direction == FirewallDirection.Out ? RuleDirectionOut : RuleDirectionIn;
+        rule.Action = RuleActionBlock;
+        rule.Enabled = _enabled;
+        rule.InterfaceTypes = "All";
+        rule.Profiles = ProfileAll;
+        rule.Protocol = ProtocolAny;
+        rule.ApplicationName = path;
+
+        rules.Add(rule);
+    }
+
+    private static void RemoveRule(dynamic rules, string name)
+    {
+        if (RuleExists(rules, name))
+            rules.Remove(name);
     }
 
     /// <summary>
@@ -245,13 +264,18 @@ public sealed class WindowsFirewallController : IFirewallController
 
                 foreach (var path in _blocked)
                 {
-                    var name = FirewallRuleNames.ForPath(path);
-                    if (!RuleExists(Rules, name))
-                        continue;
+                    // Rules created before inbound blocking existed have no direction suffix.
+                    RemoveRule(Rules, FirewallRuleNames.ForPath(path));
 
-                    dynamic rule = Rules.Item(name);
-                    if ((bool)rule.Enabled != _enabled)
-                        rule.Enabled = _enabled;
+                    EnsureRule(Rules, path, FirewallDirection.Out);
+                    EnsureRule(Rules, path, FirewallDirection.In);
+
+                    foreach (var direction in BothDirections)
+                    {
+                        dynamic rule = Rules.Item(FirewallRuleNames.ForPath(path, direction));
+                        if ((bool)rule.Enabled != _enabled)
+                            rule.Enabled = _enabled;
+                    }
 
                     live.Add(path);
                 }

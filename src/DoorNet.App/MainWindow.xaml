@@ -304,15 +304,16 @@
                     <ColumnDefinition Width="1.35*" />
                 </Grid.ColumnDefinitions>
 
-                <Border Grid.Column="0" Style="{StaticResource Card}" Margin="0,0,7,0" Padding="16,13,16,10">
+                <Border Grid.Column="0" Style="{StaticResource Card}" Margin="0,0,7,0" Padding="16,13,10,10">
                     <Grid>
                         <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
                             <RowDefinition Height="Auto" />
                             <RowDefinition Height="*" />
                             <RowDefinition Height="Auto" />
                         </Grid.RowDefinitions>
 
-                        <Grid>
+                        <Grid Margin="0,0,6,0">
                             <TextBlock Text="Top applications" Style="{StaticResource SectionTitle}" />
                             <Button Content="Enable per-app meters"
                                     Command="{Binding RestartElevatedCommand}"
@@ -330,12 +331,27 @@
                             </TextBlock>
                         </Grid>
 
-                        <Grid Grid.Row="1" Margin="0,6,0,0">
+                        <Grid Grid.Row="1" Margin="0,10,9,4">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="30" />
+                                <ColumnDefinition Width="38" />
+                                <ColumnDefinition Width="*" />
+                                <ColumnDefinition Width="74" />
+                                <ColumnDefinition Width="74" />
+                                <ColumnDefinition Width="80" />
+                            </Grid.ColumnDefinitions>
+                            <TextBlock Grid.Column="2" Text="APPLICATION" Style="{StaticResource TableHeader}" />
+                            <TextBlock Grid.Column="3" Text="DOWNLOAD" Style="{StaticResource TableHeader}" TextAlignment="Right" />
+                            <TextBlock Grid.Column="4" Text="UPLOAD" Style="{StaticResource TableHeader}" TextAlignment="Right" />
+                            <TextBlock Grid.Column="5" Text="DATA" Style="{StaticResource TableHeader}" TextAlignment="Right" />
+                        </Grid>
+
+                        <Grid Grid.Row="2">
                             <ScrollViewer VerticalScrollBarVisibility="Auto">
                                 <ItemsControl ItemsSource="{Binding Apps}">
                                     <ItemsControl.ItemTemplate>
                                         <DataTemplate>
-                                            <Border Padding="0,8"
+                                            <Border Padding="0,7"
                                                     BorderBrush="{DynamicResource LineSoftBrush}"
                                                     BorderThickness="0,0,0,1"
                                                     ToolTip="{Binding Tooltip}"
@@ -350,10 +366,12 @@
                                                 </Border.ContextMenu>
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
-                                                        <ColumnDefinition Width="Auto" />
-                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="30" />
+                                                        <ColumnDefinition Width="38" />
                                                         <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="Auto" />
+                                                        <ColumnDefinition Width="74" />
+                                                        <ColumnDefinition Width="74" />
+                                                        <ColumnDefinition Width="80" />
                                                     </Grid.ColumnDefinitions>
 
                                                     <Button Grid.Column="0"
@@ -419,7 +437,7 @@
                                                         </Grid>
                                                     </Border>
 
-                                                    <StackPanel Grid.Column="2" Margin="10,0,8,0" VerticalAlignment="Center">
+                                                    <StackPanel Grid.Column="2" Margin="0,0,8,0" VerticalAlignment="Center">
                                                         <Grid>
                                                             <Grid.ColumnDefinitions>
                                                                 <ColumnDefinition Width="*" />
@@ -445,100 +463,78 @@
                                                                    TextTrimming="CharacterEllipsis" />
                                                     </StackPanel>
 
-                                                    <StackPanel Grid.Column="3" VerticalAlignment="Center">
-                                                        <StackPanel Visibility="{Binding ShowMeters, Converter={StaticResource BoolToVis}}">
-                                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-                                                                <TextBlock Text="↓"
-                                                                           FontSize="11"
-                                                                           Foreground="{DynamicResource TextMutedBrush}"
-                                                                           VerticalAlignment="Center"
-                                                                           Margin="0,0,4,0" />
-                                                                <Border Width="46" Height="4" Background="{DynamicResource TrackBrush}" CornerRadius="2" VerticalAlignment="Center" Margin="0,0,6,0">
-                                                                    <Border Background="{DynamicResource DownloadBrush}" CornerRadius="2" RenderTransformOrigin="0,0.5">
-                                                                        <Border.RenderTransform>
-                                                                            <ScaleTransform ScaleX="{Binding DownloadScale}" />
-                                                                        </Border.RenderTransform>
-                                                                    </Border>
-                                                                </Border>
-                                                                <TextBlock Text="{Binding DownloadText}"
-                                                                           FontSize="10.5"
-                                                                           Width="60"
-                                                                           TextAlignment="Right"
-                                                                           VerticalAlignment="Center">
-                                                                    <TextBlock.Style>
-                                                                        <Style TargetType="TextBlock">
-                                                                            <Setter Property="Foreground" Value="{DynamicResource DownloadBrush}" />
-                                                                            <Style.Triggers>
-                                                                                <DataTrigger Binding="{Binding DownloadIdle}" Value="True">
-                                                                                    <Setter Property="Foreground" Value="{DynamicResource WarnBrush}" />
-                                                                                </DataTrigger>
-                                                                            </Style.Triggers>
-                                                                        </Style>
-                                                                    </TextBlock.Style>
-                                                                </TextBlock>
-                                                                <TextBlock Text="{Binding DownloadTotalText}"
-                                                                           FontSize="10"
-                                                                           Width="56"
-                                                                           TextAlignment="Right"
-                                                                           VerticalAlignment="Center"
-                                                                           Foreground="{DynamicResource TextMutedBrush}"
-                                                                           Margin="6,0,0,0"
-                                                                           ToolTip="Downloaded since DoorNet started" />
-                                                            </StackPanel>
-
-                                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,3,0,0">
-                                                                <TextBlock Text="↑"
-                                                                           FontSize="11"
-                                                                           Foreground="{DynamicResource TextMutedBrush}"
-                                                                           VerticalAlignment="Center"
-                                                                           Margin="0,0,4,0" />
-                                                                <Border Width="46" Height="4" Background="{DynamicResource TrackBrush}" CornerRadius="2" VerticalAlignment="Center" Margin="0,0,6,0">
-                                                                    <Border Background="{DynamicResource UploadBrush}" CornerRadius="2" RenderTransformOrigin="0,0.5">
-                                                                        <Border.RenderTransform>
-                                                                            <ScaleTransform ScaleX="{Binding UploadScale}" />
-                                                                        </Border.RenderTransform>
-                                                                    </Border>
-                                                                </Border>
-                                                                <TextBlock Text="{Binding UploadText}"
-                                                                           FontSize="10.5"
-                                                                           Width="60"
-                                                                           TextAlignment="Right"
-                                                                           VerticalAlignment="Center">
-                                                                    <TextBlock.Style>
-                                                                        <Style TargetType="TextBlock">
-                                                                            <Setter Property="Foreground" Value="{DynamicResource UploadBrush}" />
-                                                                            <Style.Triggers>
-                                                                                <DataTrigger Binding="{Binding UploadIdle}" Value="True">
-                                                                                    <Setter Property="Foreground" Value="{DynamicResource WarnBrush}" />
-                                                                                </DataTrigger>
-                                                                            </Style.Triggers>
-                                                                        </Style>
-                                                                    </TextBlock.Style>
-                                                                </TextBlock>
-                                                                <TextBlock Text="{Binding UploadTotalText}"
-                                                                           FontSize="10"
-                                                                           Width="56"
-                                                                           TextAlignment="Right"
-                                                                           VerticalAlignment="Center"
-                                                                           Foreground="{DynamicResource TextMutedBrush}"
-                                                                           Margin="6,0,0,0"
-                                                                           ToolTip="Uploaded since DoorNet started" />
-                                                            </StackPanel>
-                                                        </StackPanel>
-
-                                                        <StackPanel Visibility="{Binding ShowSockets, Converter={StaticResource BoolToVis}}"
-                                                                    HorizontalAlignment="Right">
-                                                            <TextBlock Text="{Binding ConnectionsText}"
-                                                                       FontSize="11"
-                                                                       Foreground="{DynamicResource TextSecondaryBrush}"
-                                                                       HorizontalAlignment="Right" />
-                                                            <Ellipse Width="6" Height="6"
-                                                                     Fill="{DynamicResource DownloadBrush}"
-                                                                     HorizontalAlignment="Right"
-                                                                     Margin="0,4,0,0"
-                                                                     Visibility="{Binding IsActive, Converter={StaticResource BoolToVis}}" />
-                                                        </StackPanel>
+                                                    <StackPanel Grid.Column="3" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                                        <TextBlock Text="{Binding DownloadText}"
+                                                                   FontSize="10.5"
+                                                                   HorizontalAlignment="Right">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Foreground" Value="{DynamicResource DownloadBrush}" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding HasMeters}" Value="False">
+                                                                            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+                                                                        </DataTrigger>
+                                                                        <MultiDataTrigger>
+                                                                            <MultiDataTrigger.Conditions>
+                                                                                <Condition Binding="{Binding HasMeters}" Value="True" />
+                                                                                <Condition Binding="{Binding DownloadIdle}" Value="True" />
+                                                                            </MultiDataTrigger.Conditions>
+                                                                            <Setter Property="Foreground" Value="{DynamicResource WarnBrush}" />
+                                                                        </MultiDataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                        <Border Height="3" Width="62" HorizontalAlignment="Right"
+                                                                Background="{DynamicResource TrackBrush}" CornerRadius="1.5" Margin="0,3,0,0"
+                                                                Visibility="{Binding HasMeters, Converter={StaticResource BoolToVis}}">
+                                                            <Border Background="{DynamicResource DownloadBrush}" CornerRadius="1.5" RenderTransformOrigin="0,0.5">
+                                                                <Border.RenderTransform>
+                                                                    <ScaleTransform ScaleX="{Binding DownloadScale}" />
+                                                                </Border.RenderTransform>
+                                                            </Border>
+                                                        </Border>
                                                     </StackPanel>
+
+                                                    <StackPanel Grid.Column="4" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                                        <TextBlock Text="{Binding UploadText}"
+                                                                   FontSize="10.5"
+                                                                   HorizontalAlignment="Right">
+                                                            <TextBlock.Style>
+                                                                <Style TargetType="TextBlock">
+                                                                    <Setter Property="Foreground" Value="{DynamicResource UploadBrush}" />
+                                                                    <Style.Triggers>
+                                                                        <DataTrigger Binding="{Binding HasMeters}" Value="False">
+                                                                            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+                                                                        </DataTrigger>
+                                                                        <MultiDataTrigger>
+                                                                            <MultiDataTrigger.Conditions>
+                                                                                <Condition Binding="{Binding HasMeters}" Value="True" />
+                                                                                <Condition Binding="{Binding UploadIdle}" Value="True" />
+                                                                            </MultiDataTrigger.Conditions>
+                                                                            <Setter Property="Foreground" Value="{DynamicResource WarnBrush}" />
+                                                                        </MultiDataTrigger>
+                                                                    </Style.Triggers>
+                                                                </Style>
+                                                            </TextBlock.Style>
+                                                        </TextBlock>
+                                                        <Border Height="3" Width="62" HorizontalAlignment="Right"
+                                                                Background="{DynamicResource TrackBrush}" CornerRadius="1.5" Margin="0,3,0,0"
+                                                                Visibility="{Binding HasMeters, Converter={StaticResource BoolToVis}}">
+                                                            <Border Background="{DynamicResource UploadBrush}" CornerRadius="1.5" RenderTransformOrigin="0,0.5">
+                                                                <Border.RenderTransform>
+                                                                    <ScaleTransform ScaleX="{Binding UploadScale}" />
+                                                                </Border.RenderTransform>
+                                                            </Border>
+                                                        </Border>
+                                                    </StackPanel>
+
+                                                    <TextBlock Grid.Column="5"
+                                                               Text="{Binding TotalText}"
+                                                               ToolTip="{Binding TotalTooltip}"
+                                                               Style="{StaticResource TableValue}"
+                                                               TextAlignment="Right"
+                                                               VerticalAlignment="Center" />
                                                 </Grid>
                                             </Border>
                                         </DataTemplate>
@@ -546,7 +542,7 @@
                                 </ItemsControl>
                             </ScrollViewer>
 
-                            <TextBlock Text="Waiting for connection data…"
+                            <TextBlock Text="Waiting for connection data..."
                                        HorizontalAlignment="Center"
                                        VerticalAlignment="Center">
                                 <TextBlock.Style>
@@ -562,7 +558,7 @@
                             </TextBlock>
                         </Grid>
 
-                        <TextBlock Grid.Row="2"
+                        <TextBlock Grid.Row="3"
                                    Text="{Binding PerAppNote}"
                                    Style="{StaticResource Caption}"
                                    FontSize="10"

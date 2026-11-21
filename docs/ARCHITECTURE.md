@@ -45,7 +45,7 @@ Packet capture / DPI, VPN functionality, cross-platform, kernel drivers.
 | PID → process | `Process.GetProcessById` | No | `MainModule.FileName` can throw for protected processes; degrade to name |
 | **Per-app bytes** | **ETW** `Microsoft-Windows-Kernel-Network` | **Yes** | Real-time session, per-event PID + byte count. This is what GlassWire does |
 | Interface metadata | `NetworkInterface`, `NetworkInterfaceType` | No | Friendly adapter name, link speed, status |
-| Internet blocking | `HNetCfg.FwPolicy2` COM (Windows Defender Firewall rules) | **Yes** | One outbound block rule per executable, grouped `DoorNet` |
+| Internet blocking | `HNetCfg.FwPolicy2` COM (Windows Defender Firewall rules) | **Yes** | Inbound + outbound block rules per executable, grouped `DoorNet` |
 
 Important: Windows exposes **no unprivileged per-process byte counters**. A given design
 must choose between "no admin, aggregate only" and "admin, per-app". DoorNet's answer is
@@ -96,7 +96,7 @@ Blocking uses Windows Defender Firewall rules, not a filter driver.
 
 | Decision | Why |
 |---|---|
-| One outbound **block** rule per executable, `Grouping = "DoorNet"` | Explicit blocks beat any allow rule; grouped so the set is easy to audit and remove |
+| One **inbound and one outbound** block rule per executable, `Grouping = "DoorNet"` | Explicit blocks beat any allow rule; blocking only outbound still left inbound flows and established replies moving |
 | Rule name `DoorNet block <file> #<sha256(path)[..8]>` | Deterministic, unique per path, so we can create/remove by name without enumerating every rule |
 | State file `%LocalAppData%\DoorNet\firewall.json` | UI can mark blocked apps before touching COM; validated against live rules when elevated |
 | No driver | GlassWire ships `gwdrv.sys` to enforce its own firewall; DoorNet intentionally stays user-mode |
