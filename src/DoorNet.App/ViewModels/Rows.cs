@@ -36,8 +36,14 @@ public sealed record AppRow(
     ImageSource? Icon,
     string ConnectionsText,
     string DetailText,
-    string TrafficText,
-    bool HasTraffic,
+    string DownloadText,
+    string UploadText,
+    double DownloadScale,
+    double UploadScale,
+    bool DownloadIdle,
+    bool UploadIdle,
+    bool ShowMeters,
+    bool ShowSockets,
     bool IsActive,
     string Tooltip)
 {

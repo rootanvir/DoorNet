@@ -12,7 +12,6 @@ using DoorNet.Core.Capture;
 using DoorNet.Core.Collections;
 using DoorNet.Core.Formatting;
 using DoorNet.Core.Models;
-
 namespace DoorNet.App.ViewModels;
 
 /// <summary>
@@ -34,6 +33,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private bool _tickRunning;
     private bool _isCapturing = true;
     private bool _disposed;
+    private bool _isNetworkIdle = true;
     private double _peakDown;
     private double _peakUp;
     private double _intervalSeconds = 1;
@@ -142,6 +142,13 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+    /// <summary>True when both directions are at zero, so the tiles can show the idle tone.</summary>
+    public bool IsNetworkIdle
+    {
+        get => _isNetworkIdle;
+        private set => SetProperty(ref _isNetworkIdle, value);
+    }
+
     public string? LastError
     {
         get => _lastError;
@@ -200,6 +207,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         UpValue = upValue;
         UpUnit = upUnit;
 
+        IsNetworkIdle = reading.DownloadBytesPerSecond < 1 && reading.UploadBytesPerSecond < 1;
+
         var sessionBytes = reading.SessionBytesReceived + reading.SessionBytesSent;
         var (totalValue, totalUnit) = ByteFormatter.SplitBytes(sessionBytes);
         TotalValue = totalValue;
@@ -246,10 +255,29 @@ public sealed class MainViewModel : ObservableObject, IDisposable
                 .OrderByDescending(a => a.ActiveConnectionCount)
                 .ThenByDescending(a => a.ConnectionCount);
 
-        var apps = ordered
+        var usage = ordered
             .ThenBy(a => a.ProcessName, StringComparer.OrdinalIgnoreCase)
-            .Select(ToAppRow)
             .ToList();
+
+        var rates = usage
+            .Select(a => (Download: a.BytesReceived / _intervalSeconds, Upload: a.BytesSent / _intervalSeconds))
+            .ToList();
+
+        var maxDownload = rates.Count == 0 ? 0 : rates.Max(r => r.Download);
+        var maxUpload = rates.Count == 0 ? 0 : rates.Max(r => r.Upload);
+        var showMeters = _perAppSource.IsAvailable;
+
+        var apps = new List<AppRow>(usage.Count);
+        for (var i = 0; i < usage.Count; i++)
+        {
+            apps.Add(ToAppRow(
+                usage[i],
+                rates[i].Download,
+                rates[i].Upload,
+                maxDownload,
+                maxUpload,
+                showMeters));
+        }
 
         RowSync.Apply(Apps, apps, r => r.ProcessId.ToString(CultureInfo.InvariantCulture));
         AppCount = apps.Count;
@@ -267,11 +295,20 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             AppIcons.ForProcess(connection.ExecutablePath, connection.ProcessName),
             connection.ExecutablePath ?? $"PID {connection.ProcessId}");
 
-    private AppRow ToAppRow(AppUsage app)
+    private static AppRow ToAppRow(
+        AppUsage app,
+        double downloadRate,
+        double uploadRate,
+        double maxDownload,
+        double maxUpload,
+        bool showMeters)
     {
         var active = app.ActiveConnectionCount;
+        var socketWord = app.ConnectionCount == 1 ? "socket" : "sockets";
+        var hostWord = app.RemoteHostCount == 1 ? "host" : "hosts";
+
         var detail = active > 0
-            ? $"{active} active · {app.RemoteHostCount} remote {(app.RemoteHostCount == 1 ? "host" : "hosts")}"
+            ? $"{active} active · {app.RemoteHostCount} {hostWord} · {app.ConnectionCount} {socketWord}"
             : app.ConnectionCount > 0
                 ? "No active outbound sockets"
                 : "Traffic only · sockets closed";
@@ -283,13 +320,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             _ => $"{app.ConnectionCount} sockets"
         };
 
-        var downRate = app.BytesReceived / _intervalSeconds;
-        var upRate = app.BytesSent / _intervalSeconds;
-        var hasTraffic = downRate > 0 || upRate > 0;
-
-        var trafficText = hasTraffic
-            ? $"↓ {ByteFormatter.FormatRate(downRate)}   ↑ {ByteFormatter.FormatRate(upRate)}"
-            : string.Empty;
+        var downloadIdle = downloadRate < 1;
+        var uploadIdle = uploadRate < 1;
 
         return new AppRow(
             app.ProcessId,
@@ -299,8 +331,14 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             AppIcons.ForProcess(app.ExecutablePath, app.ProcessName),
             connectionsText,
             detail,
-            trafficText,
-            hasTraffic,
+            downloadIdle ? "0" : ByteFormatter.FormatRate(downloadRate),
+            uploadIdle ? "0" : ByteFormatter.FormatRate(uploadRate),
+            MeterMath.Scale(downloadRate, maxDownload),
+            MeterMath.Scale(uploadRate, maxUpload),
+            downloadIdle,
+            uploadIdle,
+            showMeters,
+            !showMeters,
             active > 0,
             app.ExecutablePath ?? $"PID {app.ProcessId}");
     }
@@ -371,6 +409,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         DownPeakText = "peak 0 B/s";
         UpPeakText = "peak 0 B/s";
         SessionSplitText = "↓ 0 B   ↑ 0 B";
+        IsNetworkIdle = true;
     }
 
     public void Dispose()

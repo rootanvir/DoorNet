@@ -139,7 +139,18 @@
                         </StackPanel>
 
                         <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,6,0,0">
-                            <TextBlock Text="{Binding DownValue}" Style="{StaticResource MetricValue}" Foreground="{StaticResource DownloadBrush}" />
+                            <TextBlock Text="{Binding DownValue}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource MetricValue}">
+                                        <Setter Property="Foreground" Value="{StaticResource DownloadBrush}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsNetworkIdle}" Value="True">
+                                                <Setter Property="Foreground" Value="{StaticResource WarnBrush}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
                             <TextBlock Text="{Binding DownUnit}" Style="{StaticResource MetricUnit}" />
                         </StackPanel>
 
@@ -161,7 +172,18 @@
                         </StackPanel>
 
                         <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,6,0,0">
-                            <TextBlock Text="{Binding UpValue}" Style="{StaticResource MetricValue}" Foreground="{StaticResource UploadBrush}" />
+                            <TextBlock Text="{Binding UpValue}">
+                                <TextBlock.Style>
+                                    <Style TargetType="TextBlock" BasedOn="{StaticResource MetricValue}">
+                                        <Setter Property="Foreground" Value="{StaticResource UploadBrush}" />
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsNetworkIdle}" Value="True">
+                                                <Setter Property="Foreground" Value="{StaticResource WarnBrush}" />
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </TextBlock.Style>
+                            </TextBlock>
                             <TextBlock Text="{Binding UpUnit}" Style="{StaticResource MetricUnit}" />
                         </StackPanel>
 
@@ -317,22 +339,82 @@
                                                     </StackPanel>
 
                                                     <StackPanel Grid.Column="2" VerticalAlignment="Center">
-                                                        <TextBlock Text="{Binding TrafficText}"
-                                                                   FontSize="11.5"
-                                                                   FontWeight="SemiBold"
-                                                                   Foreground="{StaticResource DownloadBrush}"
-                                                                   HorizontalAlignment="Right"
-                                                                   Margin="0,0,0,2"
-                                                                   Visibility="{Binding HasTraffic, Converter={StaticResource BoolToVis}}" />
-                                                        <TextBlock Text="{Binding ConnectionsText}"
-                                                                   FontSize="11"
-                                                                   Foreground="{StaticResource TextSecondaryBrush}"
-                                                                   HorizontalAlignment="Right" />
-                                                        <Ellipse Width="6" Height="6"
-                                                                 Fill="{StaticResource DownloadBrush}"
-                                                                 HorizontalAlignment="Right"
-                                                                 Margin="0,4,0,0"
-                                                                 Visibility="{Binding IsActive, Converter={StaticResource BoolToVis}}" />
+                                                        <StackPanel Visibility="{Binding ShowMeters, Converter={StaticResource BoolToVis}}">
+                                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                                                                <TextBlock Text="↓"
+                                                                           FontSize="11"
+                                                                           Foreground="{StaticResource TextMutedBrush}"
+                                                                           VerticalAlignment="Center"
+                                                                           Margin="0,0,4,0" />
+                                                                <Border Width="46" Height="4" Background="#1B2733" CornerRadius="2" VerticalAlignment="Center" Margin="0,0,6,0">
+                                                                    <Border Background="{StaticResource DownloadBrush}" CornerRadius="2" RenderTransformOrigin="0,0.5">
+                                                                        <Border.RenderTransform>
+                                                                            <ScaleTransform ScaleX="{Binding DownloadScale}" />
+                                                                        </Border.RenderTransform>
+                                                                    </Border>
+                                                                </Border>
+                                                                <TextBlock Text="{Binding DownloadText}"
+                                                                           FontSize="10.5"
+                                                                           Width="60"
+                                                                           TextAlignment="Right"
+                                                                           VerticalAlignment="Center">
+                                                                    <TextBlock.Style>
+                                                                        <Style TargetType="TextBlock">
+                                                                            <Setter Property="Foreground" Value="{StaticResource DownloadBrush}" />
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding DownloadIdle}" Value="True">
+                                                                                    <Setter Property="Foreground" Value="{StaticResource WarnBrush}" />
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </TextBlock.Style>
+                                                                </TextBlock>
+                                                            </StackPanel>
+
+                                                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,3,0,0">
+                                                                <TextBlock Text="↑"
+                                                                           FontSize="11"
+                                                                           Foreground="{StaticResource TextMutedBrush}"
+                                                                           VerticalAlignment="Center"
+                                                                           Margin="0,0,4,0" />
+                                                                <Border Width="46" Height="4" Background="#1B2733" CornerRadius="2" VerticalAlignment="Center" Margin="0,0,6,0">
+                                                                    <Border Background="{StaticResource UploadBrush}" CornerRadius="2" RenderTransformOrigin="0,0.5">
+                                                                        <Border.RenderTransform>
+                                                                            <ScaleTransform ScaleX="{Binding UploadScale}" />
+                                                                        </Border.RenderTransform>
+                                                                    </Border>
+                                                                </Border>
+                                                                <TextBlock Text="{Binding UploadText}"
+                                                                           FontSize="10.5"
+                                                                           Width="60"
+                                                                           TextAlignment="Right"
+                                                                           VerticalAlignment="Center">
+                                                                    <TextBlock.Style>
+                                                                        <Style TargetType="TextBlock">
+                                                                            <Setter Property="Foreground" Value="{StaticResource UploadBrush}" />
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding UploadIdle}" Value="True">
+                                                                                    <Setter Property="Foreground" Value="{StaticResource WarnBrush}" />
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </TextBlock.Style>
+                                                                </TextBlock>
+                                                            </StackPanel>
+                                                        </StackPanel>
+
+                                                        <StackPanel Visibility="{Binding ShowSockets, Converter={StaticResource BoolToVis}}"
+                                                                    HorizontalAlignment="Right">
+                                                            <TextBlock Text="{Binding ConnectionsText}"
+                                                                       FontSize="11"
+                                                                       Foreground="{StaticResource TextSecondaryBrush}"
+                                                                       HorizontalAlignment="Right" />
+                                                            <Ellipse Width="6" Height="6"
+                                                                     Fill="{StaticResource DownloadBrush}"
+                                                                     HorizontalAlignment="Right"
+                                                                     Margin="0,4,0,0"
+                                                                     Visibility="{Binding IsActive, Converter={StaticResource BoolToVis}}" />
+                                                        </StackPanel>
                                                     </StackPanel>
                                                 </Grid>
                                             </Border>
