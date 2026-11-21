@@ -92,20 +92,6 @@ Three deliberate correctness decisions:
 Verified end-to-end with a throttled 100 MB download: `curl.exe` appears in Top applications
 with its live rate, and the per-app number tracks adapter throughput once the 1 s EMA settles.
 
-## Top applications
-
-The list is a real table with fixed columns so numbers line up across rows:
-
-| Column | Meaning |
-|---|---|
-| **APPLICATION** | Icon, name, then `active · hosts · sockets` on the second line |
-| **DOWNLOAD** | Live rate for that process, with a green bar scaled to the busiest app |
-| **UPLOAD** | Same, blue bar |
-| **DATA** | Total bytes consumed this session; tooltip shows the down/up split |
-
-Idle directions show `0` in amber (meters need the elevated ETW session; unelevated the
-numeric cells show `—` and the card offers **Enable per-app meters**).
-
 ## Blocking an application
 
 Every application row has a **padlock button at its far left** (and a right-click menu):

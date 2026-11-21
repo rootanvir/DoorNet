@@ -213,21 +213,6 @@
         </Setter>
     </Style>
 
-    <Style x:Key="TableHeader" TargetType="TextBlock">
-        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
-        <Setter Property="FontSize" Value="9.5" />
-        <Setter Property="FontWeight" Value="SemiBold" />
-        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
-        <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
-    </Style>
-
-    <Style x:Key="TableValue" TargetType="TextBlock">
-        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
-        <Setter Property="FontSize" Value="10" />
-        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
-        <Setter Property="TextOptions.TextFormattingMode" Value="Display" />
-    </Style>
-
     <Style x:Key="CellText" TargetType="TextBlock">
         <Setter Property="FontSize" Value="11.5" />
         <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
