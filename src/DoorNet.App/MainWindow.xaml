@@ -610,7 +610,8 @@
                                                                 </Grid.ColumnDefinitions>
 
                                                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                                                    <TextBlock Text="{Binding Name}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                                                                    <Image Source="{Binding Icon}" Width="16" Height="16" Margin="0,0,7,0" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality" />
+                                                                    <TextBlock Text="{Binding Name}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
                                                                     <TextBlock Text="{Binding PidText}" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" Margin="8,0,0,0" VerticalAlignment="Center" />
                                                                 </StackPanel>
 
@@ -717,17 +718,28 @@
                                                     <DataTemplate>
                                                         <Grid Margin="0,2">
                                                             <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
                                                                 <ColumnDefinition Width="*" />
                                                                 <ColumnDefinition Width="Auto" />
                                                             </Grid.ColumnDefinitions>
-                                                            <TextBlock TextTrimming="CharacterEllipsis" FontSize="10.5">
+
+                                                            <Image Grid.Column="0"
+                                                                   Source="{Binding Icon}"
+                                                                   Width="14"
+                                                                   Height="14"
+                                                                   Margin="0,0,7,0"
+                                                                   VerticalAlignment="Center"
+                                                                   Opacity="0.9"
+                                                                   RenderOptions.BitmapScalingMode="HighQuality" />
+
+                                                            <TextBlock Grid.Column="1" TextTrimming="CharacterEllipsis" FontSize="10.5">
                                                                 <Run Text="{Binding Protocol}" Foreground="{DynamicResource TextMutedBrush}" />
                                                                 <Run Text="  " />
                                                                 <Run Text="{Binding Local}" Foreground="{DynamicResource TextSecondaryBrush}" />
                                                                 <Run Text="  -&gt;  " Foreground="{DynamicResource TextMutedBrush}" />
                                                                 <Run Text="{Binding Remote}" Foreground="{DynamicResource TextSecondaryBrush}" />
                                                             </TextBlock>
-                                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,0,0,0">
+                                                            <StackPanel Grid.Column="2" Orientation="Horizontal" Margin="10,0,0,0">
                                                                 <Ellipse Width="5" Height="5" Fill="{Binding StateBrush}" VerticalAlignment="Center" Margin="0,0,5,0" />
                                                                 <TextBlock Text="{Binding State}" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" />
                                                             </StackPanel>

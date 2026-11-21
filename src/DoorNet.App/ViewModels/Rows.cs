@@ -68,7 +68,8 @@ public sealed record AppProcessRow(
     string DetailText,
     string DownloadText,
     string UploadText,
-    string TotalText);
+    string TotalText,
+    ImageSource? Icon);
 
 /// <summary>Connections for one application, collapsible in the Live connections list.</summary>
 public sealed record ConnectionGroupRow(

@@ -457,7 +457,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
                     $"{a.ConnectionCount} {(a.ConnectionCount == 1 ? "socket" : "sockets")} \u00B7 {a.ActiveConnectionCount} active",
                     showMeters ? ByteFormatter.FormatRate(a.BytesReceived / _intervalSeconds) : "\u2014",
                     showMeters ? ByteFormatter.FormatRate(a.BytesSent / _intervalSeconds) : "\u2014",
-                    showMeters ? ByteFormatter.FormatBytes(d + u) : "\u2014");
+                    showMeters ? ByteFormatter.FormatBytes(d + u) : "\u2014",
+                    AppIcons.ForProcess(a.ExecutablePath, a.ProcessName));
             })
             .ToList();
 
