@@ -1,5 +1,6 @@
 ﻿using System.Windows;
 using System.Windows.Threading;
+using DoorNet.App.Platform;
 
 namespace DoorNet.App;
 
@@ -7,6 +8,12 @@ public partial class App : Application
 {
     protected override void OnStartup(StartupEventArgs e)
     {
+        var settings = SettingsStore.Load();
+        ThemeManager.Apply(
+            string.Equals(settings.Theme, "Light", StringComparison.OrdinalIgnoreCase)
+                ? AppTheme.Light
+                : AppTheme.Dark);
+
         base.OnStartup(e);
 
         DispatcherUnhandledException += OnDispatcherUnhandledException;

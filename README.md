@@ -1,13 +1,22 @@
 # DoorNet
 
-A Windows network activity monitor: live throughput, per-application sockets, and the
-machine's real connection list — with a dark instrument-panel UI.
+A Windows network activity monitor: live throughput, per-application usage and totals,
+the machine's real connection list, light/dark themes, and one-click internet blocking
+per application.
 
-**Status: milestone 3 in progress.** The app builds, runs unprivileged, and shows real OS
+**Status: milestone 3 + firewall.** The app builds, runs unprivileged, and shows real OS
 data. Per-application byte usage is measured by an in-process kernel ETW session when the
 app is elevated (one click from the header); unelevated it says exactly why it can't.
+Blocking uses Windows Defender Firewall rules and therefore also needs elevation.
 
 ![DoorNet running](docs/screenshot.png)
+
+<details>
+<summary>Light theme</summary>
+
+![DoorNet light theme](docs/screenshot-light.png)
+
+</details>
 
 ---
 
@@ -34,8 +43,9 @@ No administrator rights, no driver, no installer yet.
 dotnet test
 ```
 
-50 unit tests cover the sampling maths, counter-reset handling, ring buffer, axis scaling,
-byte formatting, per-app aggregation, traffic-only rows, and loopback filtering.
+69 unit tests cover the sampling maths, counter-reset handling, ring buffer, axis scaling,
+byte formatting, per-app aggregation, traffic-only rows, loopback filtering, session
+totals, and firewall rule naming.
 
 ---
 
@@ -71,6 +81,31 @@ Three deliberate correctness decisions:
 Verified end-to-end with a throttled 100 MB download: `curl.exe` appears in Top applications
 with its live rate, and the per-app number tracks adapter throughput once the 1 s EMA settles.
 
+## Blocking an application
+
+Right-click an application (in **Top applications** or **Live connections**) and choose
+**Block internet access**. DoorNet adds one outbound **block** rule to Windows Defender
+Firewall for that executable, tagged `Grouping = "DoorNet"`; **Allow internet access**
+removes it. The app shows a red lock beside blocked processes, and the list of blocked
+paths persists across restarts in `%LocalAppData%\DoorNet\firewall.json`.
+
+Why rules instead of a driver: GlassWire ships its own WFP driver (`gwdrv.sys`) to enforce
+its firewall. DoorNet deliberately does not — an OS rule needs no kernel component, survives
+reboots, is visible in Windows Firewall, and can be removed even if DoorNet is uninstalled.
+The trade-offs are honest:
+
+- **Requires elevation** — creating rules needs administrator rights. Right-clicking while
+  unelevated offers to restart elevated.
+- **Per executable** — blocking `app.exe` does not block another binary; apps with a
+  separate network helper exe need that one blocked too.
+- **Only efficient while Windows Firewall is enforcing.** If another tool disables Windows
+  Firewall, the rule is inert. (GlassWire's own firewall mode does that.)
+- **Protected processes** (`lsass`, PPL/EDR) have no readable path, so DoorNet disables the
+  menu action instead of guessing.
+
+Verified on this machine: blocking `curl.exe` made connections fail (`curl` exit 7) with
+the rule present; allowing it removed the rule and restored connectivity.
+
 ## Architecture
 
 ```
@@ -93,13 +128,20 @@ milestones, elevation model, packaging and risk list: **[docs/ARCHITECTURE.md](d
 | 1 | Live throughput + connection inventory | **done** |
 | 2 | SQLite history, 24 h charts | next |
 | 3 | Elevated ETW per-app byte usage (`Microsoft-Windows-Kernel-Network`) | **in-process done**, service pending |
+| 3b | Per-app internet blocking (Windows Firewall rules) | **done**, requires elevation |
 | 4 | Tray icon, start with Windows, new-connection alerts | planned |
 | 5 | Signed installer + auto-update | planned |
 
 ## Notes
 
+- **Themes:** the header sun/moon button switches light/dark instantly and the choice is
+  saved to `%LocalAppData%\DoorNet\settings.json`. All UI colours are semantic brushes in
+  `Styles/Palette.*.xaml`; the window repaints in place without a restart.
+- **Windows 10 title bar:** `DWMWA_CAPTION_COLOR` is Windows 11-only, and Windows 10 ignores
+  the immersive flag when the system is in dark mode, so the *native* title bar keeps
+  following the system theme. The app content itself themes fully.
 - `reverse.eng/` contains a GlassWire installer and a Ghidra export of its **NSIS installer
   stub**. It is reference material only: DoorNet shares no code, assets or branding with
   GlassWire, and its UI is an original design.
-- This is a monitoring tool. It reads the connection table and adapter counters; it does
-  not capture packet contents, modify traffic, or open firewall rules.
+- This is a monitoring and blocking tool. It reads the connection table and adapter
+  counters and adds/removes firewall rules; it does not inspect packet contents.

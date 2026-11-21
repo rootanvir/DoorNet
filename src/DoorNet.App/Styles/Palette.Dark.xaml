@@ -1,0 +1,54 @@
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- Every brush the UI uses. Light and dark palettes define the same keys; ThemeManager
+         swaps this dictionary at runtime, so all consumers must use DynamicResource. -->
+
+    <SolidColorBrush x:Key="CanvasBrush" Color="#0B0F14" />
+    <SolidColorBrush x:Key="HeaderBrush" Color="#0D1319" />
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#121A22" />
+    <SolidColorBrush x:Key="SurfaceAltBrush" Color="#0F161D" />
+    <SolidColorBrush x:Key="LineBrush" Color="#1E2A35" />
+    <SolidColorBrush x:Key="LineSoftBrush" Color="#17222C" />
+
+    <SolidColorBrush x:Key="TextPrimaryBrush" Color="#E6EDF3" />
+    <SolidColorBrush x:Key="TextSecondaryBrush" Color="#93A4B5" />
+    <SolidColorBrush x:Key="TextMutedBrush" Color="#67798B" />
+
+    <SolidColorBrush x:Key="DownloadBrush" Color="#35E08E" />
+    <SolidColorBrush x:Key="UploadBrush" Color="#4C9BFF" />
+    <SolidColorBrush x:Key="WarnBrush" Color="#F5B95C" />
+    <SolidColorBrush x:Key="DangerBrush" Color="#F87171" />
+
+    <SolidColorBrush x:Key="LogoBrush" Color="#13231C" />
+    <SolidColorBrush x:Key="LogoBorderBrush" Color="#1F4A36" />
+
+    <SolidColorBrush x:Key="LivePillBrush" Color="#10251C" />
+    <SolidColorBrush x:Key="LivePillBorderBrush" Color="#1C4632" />
+    <SolidColorBrush x:Key="PausedPillBrush" Color="#171F27" />
+    <SolidColorBrush x:Key="PausedPillBorderBrush" Color="#283542" />
+    <SolidColorBrush x:Key="SubtlePillBrush" Color="#18222C" />
+
+    <SolidColorBrush x:Key="BadgeBrush" Color="#16202A" />
+    <SolidColorBrush x:Key="TrackBrush" Color="#1B2733" />
+
+    <SolidColorBrush x:Key="ButtonBrush" Color="#131C25" />
+    <SolidColorBrush x:Key="ButtonHoverBrush" Color="#1A2632" />
+    <SolidColorBrush x:Key="ButtonPressedBrush" Color="#0E161D" />
+    <SolidColorBrush x:Key="ButtonBorderBrush" Color="#22303C" />
+    <SolidColorBrush x:Key="ButtonTextBrush" Color="#D7E2EC" />
+
+    <SolidColorBrush x:Key="GridAltBrush" Color="#0F161D" />
+    <SolidColorBrush x:Key="RowHoverBrush" Color="#141D26" />
+    <SolidColorBrush x:Key="RowSelectedBrush" Color="#17242F" />
+
+    <SolidColorBrush x:Key="ScrollThumbBrush" Color="#2B3844" />
+
+    <SolidColorBrush x:Key="TooltipBrush" Color="#1A2530" />
+    <SolidColorBrush x:Key="TooltipBorderBrush" Color="#2B3A48" />
+    <SolidColorBrush x:Key="TooltipTextBrush" Color="#DCE7F1" />
+
+    <SolidColorBrush x:Key="ChartGridBrush" Color="#1B2733" />
+    <SolidColorBrush x:Key="ChartLabelBrush" Color="#5A6C7E" />
+
+</ResourceDictionary>

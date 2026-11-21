@@ -9,10 +9,16 @@ namespace DoorNet.App.Controls;
 /// <summary>
 /// Dependency-free dual-series throughput chart. Draws a filled download area, an upload
 /// line and a byte-scaled grid in a single <see cref="OnRender"/> pass, so a 1 Hz update
-/// costs no visual tree churn.
+/// costs no visual tree churn. Brushes are dependency properties so the theme can switch
+/// without rebuilding the control.
 /// </summary>
 public sealed class ThroughputChart : FrameworkElement
 {
+    private static readonly Brush DefaultDownload = Frozen("#35E08E");
+    private static readonly Brush DefaultUpload = Frozen("#4C9BFF");
+    private static readonly Brush DefaultGrid = Frozen("#1B2733");
+    private static readonly Brush DefaultLabel = Frozen("#5A6C7E");
+
     public static readonly DependencyProperty PointsProperty = DependencyProperty.Register(
         nameof(Points),
         typeof(IReadOnlyList<ThroughputPoint>),
@@ -25,17 +31,29 @@ public sealed class ThroughputChart : FrameworkElement
         typeof(ThroughputChart),
         new FrameworkPropertyMetadata(90, FrameworkPropertyMetadataOptions.AffectsRender));
 
-    public static readonly DependencyProperty DownloadColorProperty = DependencyProperty.Register(
-        nameof(DownloadColor),
-        typeof(Color),
+    public static readonly DependencyProperty DownloadBrushProperty = DependencyProperty.Register(
+        nameof(DownloadBrush),
+        typeof(Brush),
         typeof(ThroughputChart),
-        new FrameworkPropertyMetadata(Color.FromRgb(0x35, 0xE0, 0x8E), FrameworkPropertyMetadataOptions.AffectsRender));
+        new FrameworkPropertyMetadata(DefaultDownload, FrameworkPropertyMetadataOptions.AffectsRender));
 
-    public static readonly DependencyProperty UploadColorProperty = DependencyProperty.Register(
-        nameof(UploadColor),
-        typeof(Color),
+    public static readonly DependencyProperty UploadBrushProperty = DependencyProperty.Register(
+        nameof(UploadBrush),
+        typeof(Brush),
         typeof(ThroughputChart),
-        new FrameworkPropertyMetadata(Color.FromRgb(0x4C, 0x9B, 0xFF), FrameworkPropertyMetadataOptions.AffectsRender));
+        new FrameworkPropertyMetadata(DefaultUpload, FrameworkPropertyMetadataOptions.AffectsRender));
+
+    public static readonly DependencyProperty GridBrushProperty = DependencyProperty.Register(
+        nameof(GridBrush),
+        typeof(Brush),
+        typeof(ThroughputChart),
+        new FrameworkPropertyMetadata(DefaultGrid, FrameworkPropertyMetadataOptions.AffectsRender));
+
+    public static readonly DependencyProperty LabelBrushProperty = DependencyProperty.Register(
+        nameof(LabelBrush),
+        typeof(Brush),
+        typeof(ThroughputChart),
+        new FrameworkPropertyMetadata(DefaultLabel, FrameworkPropertyMetadataOptions.AffectsRender));
 
     private static readonly Typeface LabelTypeface = new("Segoe UI");
 
@@ -51,16 +69,28 @@ public sealed class ThroughputChart : FrameworkElement
         set => SetValue(CapacityProperty, value);
     }
 
-    public Color DownloadColor
+    public Brush DownloadBrush
     {
-        get => (Color)GetValue(DownloadColorProperty);
-        set => SetValue(DownloadColorProperty, value);
+        get => (Brush)GetValue(DownloadBrushProperty);
+        set => SetValue(DownloadBrushProperty, value);
     }
 
-    public Color UploadColor
+    public Brush UploadBrush
     {
-        get => (Color)GetValue(UploadColorProperty);
-        set => SetValue(UploadColorProperty, value);
+        get => (Brush)GetValue(UploadBrushProperty);
+        set => SetValue(UploadBrushProperty, value);
+    }
+
+    public Brush GridBrush
+    {
+        get => (Brush)GetValue(GridBrushProperty);
+        set => SetValue(GridBrushProperty, value);
+    }
+
+    public Brush LabelBrush
+    {
+        get => (Brush)GetValue(LabelBrushProperty);
+        set => SetValue(LabelBrushProperty, value);
     }
 
     protected override void OnRender(DrawingContext dc)
@@ -116,30 +146,30 @@ public sealed class ThroughputChart : FrameworkElement
 
         downloadGeometry.Freeze();
 
+        var downloadColor = SolidColorOf(DownloadBrush, "#35E08E");
         var areaBrush = new LinearGradientBrush(
-            Color.FromArgb(0x55, DownloadColor.R, DownloadColor.G, DownloadColor.B),
-            Color.FromArgb(0x00, DownloadColor.R, DownloadColor.G, DownloadColor.B),
+            Color.FromArgb(0x55, downloadColor.R, downloadColor.G, downloadColor.B),
+            Color.FromArgb(0x00, downloadColor.R, downloadColor.G, downloadColor.B),
             new Point(0, 0),
             new Point(0, 1));
         areaBrush.Freeze();
 
         dc.DrawGeometry(areaBrush, null, downloadGeometry);
-        dc.DrawGeometry(null, CreateLinePen(DownloadColor, 2.0), BuildLine(points, X, Y, p => p.DownloadBytesPerSecond));
-        dc.DrawGeometry(null, CreateLinePen(UploadColor, 1.6), BuildLine(points, X, Y, p => p.UploadBytesPerSecond));
+        dc.DrawGeometry(null, CreateLinePen(DownloadBrush, 2.0), BuildLine(points, X, Y, p => p.DownloadBytesPerSecond));
+        dc.DrawGeometry(null, CreateLinePen(UploadBrush, 1.6), BuildLine(points, X, Y, p => p.UploadBytesPerSecond));
 
-        DrawEndpoint(dc, new Point(X(points.Count - 1), Y(points[^1].DownloadBytesPerSecond)), DownloadColor);
-        DrawEndpoint(dc, new Point(X(points.Count - 1), Y(points[^1].UploadBytesPerSecond)), UploadColor);
+        DrawEndpoint(dc, new Point(X(points.Count - 1), Y(points[^1].DownloadBytesPerSecond)), DownloadBrush);
+        DrawEndpoint(dc, new Point(X(points.Count - 1), Y(points[^1].UploadBytesPerSecond)), UploadBrush);
 
         dc.Pop();
     }
 
-    private static void DrawGrid(DrawingContext dc, Rect plot, double axisMax, double dpi)
+    private void DrawGrid(DrawingContext dc, Rect plot, double axisMax, double dpi)
     {
-        var gridPen = new Pen(new SolidColorBrush(Color.FromRgb(0x1B, 0x27, 0x33)), 1);
+        var gridPen = new Pen(GridBrush, 1);
         gridPen.Freeze();
 
-        var labelBrush = new SolidColorBrush(Color.FromRgb(0x5A, 0x6C, 0x7E));
-        labelBrush.Freeze();
+        var labelBrush = LabelBrush;
 
         for (var i = 0; i <= 4; i++)
         {
@@ -178,11 +208,8 @@ public sealed class ThroughputChart : FrameworkElement
         return geometry;
     }
 
-    private static Pen CreateLinePen(Color color, double thickness)
+    private static Pen CreateLinePen(Brush brush, double thickness)
     {
-        var brush = new SolidColorBrush(color);
-        brush.Freeze();
-
         var pen = new Pen(brush, thickness)
         {
             LineJoin = PenLineJoin.Round,
@@ -193,10 +220,21 @@ public sealed class ThroughputChart : FrameworkElement
         return pen;
     }
 
-    private static void DrawEndpoint(DrawingContext dc, Point center, Color color)
-    {
-        var brush = new SolidColorBrush(color);
-        brush.Freeze();
+    private static void DrawEndpoint(DrawingContext dc, Point center, Brush brush) =>
         dc.DrawEllipse(brush, null, center, 3, 3);
+
+    private static Color SolidColorOf(Brush brush, string fallback)
+    {
+        if (brush is SolidColorBrush solid)
+            return solid.Color;
+
+        return (Color)ColorConverter.ConvertFromString(fallback);
+    }
+
+    private static Brush Frozen(string hex)
+    {
+        var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
+        brush.Freeze();
+        return brush;
     }
 }

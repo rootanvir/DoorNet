@@ -45,6 +45,7 @@ Packet capture / DPI, VPN functionality, cross-platform, kernel drivers.
 | PID → process | `Process.GetProcessById` | No | `MainModule.FileName` can throw for protected processes; degrade to name |
 | **Per-app bytes** | **ETW** `Microsoft-Windows-Kernel-Network` | **Yes** | Real-time session, per-event PID + byte count. This is what GlassWire does |
 | Interface metadata | `NetworkInterface`, `NetworkInterfaceType` | No | Friendly adapter name, link speed, status |
+| Internet blocking | `HNetCfg.FwPolicy2` COM (Windows Defender Firewall rules) | **Yes** | One outbound block rule per executable, grouped `DoorNet` |
 
 Important: Windows exposes **no unprivileged per-process byte counters**. A given design
 must choose between "no admin, aggregate only" and "admin, per-app". DoorNet's answer is
@@ -89,14 +90,34 @@ v1 filters adapters by type and status; v2 adds per-adapter selection in Setting
 
 ---
 
+## 3b. Firewall model
+
+Blocking uses Windows Defender Firewall rules, not a filter driver.
+
+| Decision | Why |
+|---|---|
+| One outbound **block** rule per executable, `Grouping = "DoorNet"` | Explicit blocks beat any allow rule; grouped so the set is easy to audit and remove |
+| Rule name `DoorNet block <file> #<sha256(path)[..8]>` | Deterministic, unique per path, so we can create/remove by name without enumerating every rule |
+| State file `%LocalAppData%\DoorNet\firewall.json` | UI can mark blocked apps before touching COM; validated against live rules when elevated |
+| No driver | GlassWire ships `gwdrv.sys` to enforce its own firewall; DoorNet intentionally stays user-mode |
+
+Limitations, all surfaced in the UI: elevation is required; rules target an executable, not
+an app family; the rule is inert if another product disables Windows Firewall; protected
+processes (PPL/EDR) expose no path and the menu action is disabled rather than guessed.
+
+Verified on this machine: blocking `curl.exe` made connections fail (`curl` exit 7) with the
+rule present, and allowing it removed the rule and restored connectivity.
+
+---
+
 ## 4. Project layout
 
 ```
 DoorNet.slnx
 src/
-  DoorNet.Core/        net10.0          models, interfaces, sampling math, formatting
-  DoorNet.Capture/     net10.0-windows  Windows API + ETW implementations of Core interfaces
-  DoorNet.App/         net10.0-windows  WPF shell (views, view-models, custom chart)
+  DoorNet.Core/        net10.0          models, interfaces, sampling math, formatting, firewall contracts
+  DoorNet.Capture/     net10.0-windows  Windows API, ETW and firewall implementations of Core interfaces
+  DoorNet.App/         net10.0-windows  WPF shell (views, view-models, custom chart, palettes)
 docs/ARCHITECTURE.md
 ```
 
@@ -137,6 +158,12 @@ branding are not reused).
 
 Typography: Segoe UI Variable; numeric columns use tabular figures so digits don't jitter.
 
+**Theming:** every colour is a semantic brush in `Styles/Palette.Dark.xaml` /
+`Styles/Palette.Light.xaml`; no view contains a literal hex value. `ThemeManager` recolours
+the live brush instances in place, so the window switches without rebuilding the visual
+tree, and the choice is stored in `%LocalAppData%\DoorNet\settings.json`. On Windows 10 the
+native caption keeps following the system theme (caption colour APIs are Windows 11-only).
+
 ---
 
 ## 7. Milestones
@@ -146,6 +173,7 @@ Typography: Segoe UI Variable; numeric columns use tabular figures so digits don
 | **1** | **Skeleton (this session)** | Window shows real live throughput, real connections, real per-app connection counts; builds with `dotnet build`; runs unelevated |
 | 2 | Persistence | SQLite samples + rollups survive restart; 24 h chart |
 | 3 | ETW per-app bytes | **done in-process** (kernel session, loopback filtered, conflict-safe). Service host pending |
+| 3b | Firewall | outbound block/allow per executable via Windows Firewall rules, verified |
 | 4 | Tray + autostart + alerts | Tray tooltip, start with Windows, first-contact notifications |
 | 5 | Packaging | Signed installer, auto-update, crash reporting |
 

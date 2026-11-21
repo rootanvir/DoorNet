@@ -12,8 +12,13 @@ public sealed record ConnectionRow(
     string State,
     Brush StateBrush,
     ImageSource? Icon,
+    string? ExecutablePath,
+    bool IsBlocked,
     string Tooltip)
 {
+    public bool CanBlock => ExecutablePath is not null;
+
+    public string BlockMenuHeader => IsBlocked ? "Allow internet access" : "Block internet access";
     public static readonly Brush LiveBrush = Frozen("#35E08E");
     public static readonly Brush ListenBrush = Frozen("#5B8FB9");
     public static readonly Brush IdleBrush = Frozen("#5A6C7E");
@@ -47,10 +52,16 @@ public sealed record AppRow(
     bool ShowMeters,
     bool ShowSockets,
     bool IsActive,
+    string? ExecutablePath,
+    bool IsBlocked,
     string Tooltip)
 {
     /// <summary>False for protected processes the shell cannot give us an image for.</summary>
     public bool HasIcon => Icon is not null;
+
+    public bool CanBlock => ExecutablePath is not null;
+
+    public string BlockMenuHeader => IsBlocked ? "Allow internet access" : "Block internet access";
 }
 
 /// <summary>Deterministic accent colours so an app keeps the same badge across runs.</summary>

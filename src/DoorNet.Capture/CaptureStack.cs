@@ -14,4 +14,7 @@ public static class CaptureStack
 
     public static DoorNet.Core.Abstractions.IPerAppUsageSource CreatePerAppUsageSource() =>
         new EtwPerAppUsageSource();
+
+    public static DoorNet.Core.Firewall.IFirewallController CreateFirewallController() =>
+        new WindowsFirewallController();
 }

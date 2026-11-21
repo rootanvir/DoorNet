@@ -11,6 +11,7 @@ using DoorNet.Core.Aggregation;
 using DoorNet.Core.Capture;
 using DoorNet.Core.Collections;
 using DoorNet.Core.Formatting;
+using DoorNet.Core.Firewall;
 using DoorNet.Core.Models;
 namespace DoorNet.App.ViewModels;
 
@@ -26,6 +27,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly IThroughputSource _throughputSource;
     private readonly IConnectionSource _connectionSource;
     private readonly IPerAppUsageSource _perAppSource;
+    private readonly IFirewallController _firewall;
     private readonly ThroughputSampler _sampler = new();
     private readonly RingBuffer<ThroughputPoint> _history = new(HistoryCapacity);
     private readonly UsageTotals _usageTotals = new();
@@ -35,6 +37,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private bool _isCapturing = true;
     private bool _disposed;
     private bool _isNetworkIdle = true;
+    private AppTheme _theme = AppTheme.Dark;
     private double _peakDown;
     private double _peakUp;
     private double _intervalSeconds = 1;
@@ -61,22 +64,28 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         : this(
             CaptureStack.CreateThroughputSource(),
             CaptureStack.CreateConnectionSource(),
-            CaptureStack.CreatePerAppUsageSource())
+            CaptureStack.CreatePerAppUsageSource(),
+            CaptureStack.CreateFirewallController())
     {
     }
 
     public MainViewModel(
         IThroughputSource throughputSource,
         IConnectionSource connectionSource,
-        IPerAppUsageSource perAppSource)
+        IPerAppUsageSource perAppSource,
+        IFirewallController firewall)
     {
         _throughputSource = throughputSource;
         _connectionSource = connectionSource;
         _perAppSource = perAppSource;
+        _firewall = firewall;
 
         ToggleCaptureCommand = new RelayCommand(ToggleCapture);
         ResetSessionCommand = new RelayCommand(ResetSession);
         RestartElevatedCommand = new RelayCommand(RestartElevated);
+        _theme = ThemeManager.Current;
+        ToggleThemeCommand = new RelayCommand(ToggleTheme);
+        ToggleBlockCommand = new RelayCommand<object?>(ToggleBlock);
 
         CanOfferElevation = !Environment.IsPrivilegedProcess;
 
@@ -104,6 +113,15 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public RelayCommand ToggleCaptureCommand { get; }
     public RelayCommand ResetSessionCommand { get; }
     public RelayCommand RestartElevatedCommand { get; }
+    public RelayCommand ToggleThemeCommand { get; }
+    public RelayCommand<object?> ToggleBlockCommand { get; }
+
+    /// <summary>Raised after the palette changes so the window can restyle its native chrome.</summary>
+    public event EventHandler? ThemeChanged;
+
+    public string ThemeGlyph => _theme == AppTheme.Dark ? "\uE706" : "\uE708";
+
+    public string ThemeTooltip => _theme == AppTheme.Dark ? "Switch to light theme" : "Switch to dark theme";
 
     /// <summary>True when the process is not elevated and can offer a UAC relaunch.</summary>
     public bool CanOfferElevation { get; }
@@ -297,7 +315,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         AppCount = apps.Count;
     }
 
-    private static ConnectionRow ToRow(ConnectionInfo connection) =>
+    private ConnectionRow ToRow(ConnectionInfo connection) =>
         new(
             connection.Key,
             connection.ProcessName,
@@ -307,9 +325,16 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             connection.State,
             BrushForState(connection.State),
             AppIcons.ForProcess(connection.ExecutablePath, connection.ProcessName),
-            connection.ExecutablePath ?? $"PID {connection.ProcessId}");
+            connection.ExecutablePath,
+            _firewall.IsBlocked(connection.ExecutablePath),
+            TooltipFor(connection.ExecutablePath, connection.ProcessId));
 
-    private static AppRow ToAppRow(
+    private static string TooltipFor(string? executablePath, int processId) =>
+        executablePath is null
+            ? $"PID {processId}"
+            : $"{executablePath}\nRight-click to block or allow internet access";
+
+    private AppRow ToAppRow(
         AppUsage app,
         double downloadRate,
         double uploadRate,
@@ -358,7 +383,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             showMeters,
             !showMeters,
             active > 0,
-            app.ExecutablePath ?? $"PID {app.ProcessId}");
+            app.ExecutablePath,
+            _firewall.IsBlocked(app.ExecutablePath),
+            TooltipFor(app.ExecutablePath, app.ProcessId));
     }
 
     private static int StatePriority(string state) => state switch
@@ -386,6 +413,88 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         if (IsCapturing)
             _ = TickAsync();
+    }
+
+    private void ToggleBlock(object? parameter)
+    {
+        var path = parameter switch
+        {
+            AppRow app => app.ExecutablePath,
+            ConnectionRow connection => connection.ExecutablePath,
+            _ => null
+        };
+
+        var name = parameter switch
+        {
+            AppRow app => app.Name,
+            ConnectionRow connection => connection.ProcessName,
+            _ => "this application"
+        };
+
+        if (path is null)
+        {
+            MessageBox.Show(
+                "DoorNet cannot read this process's executable path, so it cannot create a firewall rule for it.",
+                "Block internet access",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        if (!_firewall.IsAvailable)
+        {
+            var elevate = MessageBox.Show(
+                $"{_firewall.UnavailableReason}\n\nRestart DoorNet with administrator rights now?",
+                "Block internet access",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (elevate == MessageBoxResult.Yes)
+                RestartElevated();
+
+            return;
+        }
+
+        var isBlocked = _firewall.IsBlocked(path);
+
+        if (!isBlocked)
+        {
+            var confirm = MessageBox.Show(
+                $"Block internet access for {name}?\n\n" +
+                $"This adds a Windows Firewall outbound rule for:\n{path}\n\n" +
+                "You can allow it again from DoorNet (right-click → Allow internet access).",
+                "Block internet access",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (confirm != MessageBoxResult.Yes)
+                return;
+        }
+
+        var result = isBlocked ? _firewall.Allow(path) : _firewall.Block(path);
+
+        if (!result.Succeeded)
+        {
+            MessageBox.Show(result.Message, "DoorNet firewall", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        // Rebuild the rows now instead of waiting up to a second for the next tick.
+        _ = TickAsync();
+    }
+
+    private void ToggleTheme()
+    {
+        _theme = _theme == AppTheme.Dark ? AppTheme.Light : AppTheme.Dark;
+        ThemeManager.Apply(_theme);
+
+        var settings = SettingsStore.Load();
+        settings.Theme = _theme.ToString();
+        SettingsStore.Save(settings);
+
+        OnPropertyChanged(nameof(ThemeGlyph));
+        OnPropertyChanged(nameof(ThemeTooltip));
+        ThemeChanged?.Invoke(this, EventArgs.Empty);
     }
 
     private void RestartElevated()
