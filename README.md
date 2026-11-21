@@ -25,17 +25,25 @@ Blocking uses Windows Defender Firewall rules and therefore also needs elevation
 Requires the **.NET 10 SDK** (this machine has it; .NET 8 works too if you retarget).
 
 ```powershell
+cd C:\Users\t4nv1r\Desktop\DoorNet
 dotnet run --project src/DoorNet.App
 ```
 
-Or:
+Or use the launcher (builds first, then starts):
+
+```powershell
+.\run.cmd              # normal
+.\run.cmd elevated     # through UAC, for per-app bytes + firewall control
+```
+
+Manual equivalent:
 
 ```powershell
 dotnet build DoorNet.slnx
 .\src\DoorNet.App\bin\Debug\net10.0-windows\DoorNet.App.exe
 ```
 
-No administrator rights, no driver, no installer yet.
+Close the app before rebuilding — it holds `bin\` DLLs while running.
 
 ## Test it
 

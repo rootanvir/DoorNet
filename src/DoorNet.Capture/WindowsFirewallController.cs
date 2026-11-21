@@ -210,7 +210,7 @@ public sealed class WindowsFirewallController : IFirewallController
                     SaveState();
                 }
             }
-            catch (Exception ex)
+            catch (Exception)
             {
                 _comUnavailable = true;
             }
