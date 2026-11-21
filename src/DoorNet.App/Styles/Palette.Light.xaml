@@ -19,6 +19,10 @@
     <SolidColorBrush x:Key="UploadBrush" Color="#2563EB" />
     <SolidColorBrush x:Key="WarnBrush" Color="#B45309" />
     <SolidColorBrush x:Key="DangerBrush" Color="#DC2626" />
+    <SolidColorBrush x:Key="SuccessSoftBrush" Color="#E5F7EE" />
+    <SolidColorBrush x:Key="SuccessSoftBorderBrush" Color="#B6E3CF" />
+    <SolidColorBrush x:Key="DangerSoftBrush" Color="#FDECEC" />
+    <SolidColorBrush x:Key="DangerSoftBorderBrush" Color="#F3C2C2" />
 
     <SolidColorBrush x:Key="LogoBrush" Color="#E7F7EF" />
     <SolidColorBrush x:Key="LogoBorderBrush" Color="#B6E3CF" />

@@ -86,6 +86,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _theme = ThemeManager.Current;
         ToggleThemeCommand = new RelayCommand(ToggleTheme);
         ToggleBlockCommand = new RelayCommand<object?>(ToggleBlock);
+        ToggleInboundCommand = new RelayCommand<object?>(row => ToggleDirection(row, FirewallDirection.In));
+        ToggleOutboundCommand = new RelayCommand<object?>(row => ToggleDirection(row, FirewallDirection.Out));
         ToggleFirewallCommand = new RelayCommand(ToggleFirewall);
 
         CanOfferElevation = !Environment.IsPrivilegedProcess;
@@ -116,6 +118,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public RelayCommand RestartElevatedCommand { get; }
     public RelayCommand ToggleThemeCommand { get; }
     public RelayCommand<object?> ToggleBlockCommand { get; }
+    public RelayCommand<object?> ToggleInboundCommand { get; }
+    public RelayCommand<object?> ToggleOutboundCommand { get; }
     public RelayCommand ToggleFirewallCommand { get; }
 
     /// <summary>Master switch for every DoorNet firewall rule.</summary>
@@ -399,6 +403,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             active > 0,
             app.ExecutablePath,
             _firewall.IsBlocked(app.ExecutablePath),
+            _firewall.IsBlocked(app.ExecutablePath, FirewallDirection.In),
+            _firewall.IsBlocked(app.ExecutablePath, FirewallDirection.Out),
             TooltipFor(app.ExecutablePath, app.ProcessId));
     }
 
@@ -427,6 +433,61 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         if (IsCapturing)
             _ = TickAsync();
+    }
+
+    private void ToggleDirection(object? parameter, FirewallDirection direction)
+    {
+        var (path, name) = parameter switch
+        {
+            AppRow app => (app.ExecutablePath, app.Name),
+            ConnectionRow connection => (connection.ExecutablePath, connection.ProcessName),
+            _ => (null, null)
+        };
+
+        if (path is null)
+        {
+            MessageBox.Show(
+                "DoorNet cannot read this process's executable path, so it cannot create a firewall rule for it.",
+                "DoorNet firewall",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        if (!_firewall.IsAvailable)
+        {
+            var elevate = MessageBox.Show(
+                $"{_firewall.UnavailableReason}\n\nRestart DoorNet with administrator rights now?",
+                "DoorNet firewall",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (elevate == MessageBoxResult.Yes)
+                RestartElevated();
+
+            return;
+        }
+
+        if (!_firewall.IsEnabled)
+        {
+            MessageBox.Show(
+                "The DoorNet firewall is off. Turn it on from the header, then change this application.",
+                "DoorNet firewall",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
+        var blocked = _firewall.IsBlocked(path, direction);
+        var result = _firewall.SetBlocked(path, direction, !blocked);
+
+        if (!result.Succeeded)
+        {
+            MessageBox.Show(result.Message, "DoorNet firewall", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        _ = TickAsync();
     }
 
     private void ToggleBlock(object? parameter)

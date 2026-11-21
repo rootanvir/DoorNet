@@ -54,6 +54,8 @@ public sealed record AppRow(
     bool IsActive,
     string? ExecutablePath,
     bool IsBlocked,
+    bool InBlocked,
+    bool OutBlocked,
     string Tooltip)
 {
     /// <summary>False for protected processes the shell cannot give us an image for.</summary>
@@ -62,6 +64,10 @@ public sealed record AppRow(
     public bool CanBlock => ExecutablePath is not null;
 
     public string BlockMenuHeader => IsBlocked ? "Allow internet access" : "Block internet access";
+
+    public string InStateText => InBlocked ? "Blocked" : "Allowed";
+
+    public string OutStateText => OutBlocked ? "Blocked" : "Allowed";
 }
 
 /// <summary>Deterministic accent colours so an app keeps the same badge across runs.</summary>

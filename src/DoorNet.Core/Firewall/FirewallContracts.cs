@@ -36,8 +36,13 @@ public interface IFirewallController
 
     bool IsBlocked(string? executablePath);
 
+    bool IsBlocked(string? executablePath, FirewallDirection direction);
+
     /// <summary>Turns every DoorNet rule on or off without losing the blocked list.</summary>
     FirewallChangeResult SetEnabled(bool enabled);
+
+    /// <summary>Blocks or allows one direction for an executable.</summary>
+    FirewallChangeResult SetBlocked(string? executablePath, FirewallDirection direction, bool blocked);
 
     FirewallChangeResult Block(string? executablePath);
 

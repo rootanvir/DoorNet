@@ -5,12 +5,13 @@ using DoorNet.Core.Firewall;
 namespace DoorNet.Capture;
 
 /// <summary>
-/// Blocks an application's outbound traffic with a Windows Defender Firewall rule.
+/// Blocks an application's traffic with Windows Defender Firewall rules — one inbound and
+/// one outbound per executable, controllable independently.
 /// <para>
-/// GlassWire does this with its own WFP driver; DoorNet deliberately does not ship a driver.
-/// A per-program outbound block rule is supported by every Windows version we target,
-/// visible in Windows Firewall, and removable without reinstalling anything — at the cost
-/// of requiring elevation and of only taking effect while Windows Firewall is enforcing.
+/// GlassWire enforces its firewall with its own WFP driver; DoorNet deliberately does not.
+/// OS rules need no kernel component, survive reboots, are visible in Windows Firewall and
+/// can be removed without reinstalling anything — at the cost of requiring elevation and
+/// only taking effect while Windows Firewall is enforcing.
 /// </para>
 /// </summary>
 public sealed class WindowsFirewallController : IFirewallController
@@ -28,7 +29,7 @@ public sealed class WindowsFirewallController : IFirewallController
         [FirewallDirection.Out, FirewallDirection.In];
 
     private readonly object _sync = new();
-    private readonly HashSet<string> _blocked = new(StringComparer.OrdinalIgnoreCase);
+    private readonly Dictionary<string, BlockFlags> _blocked = new(StringComparer.OrdinalIgnoreCase);
     private readonly string _statePath;
 
     private object? _policy;
@@ -69,7 +70,7 @@ public sealed class WindowsFirewallController : IFirewallController
         get
         {
             lock (_sync)
-                return _blocked.ToArray();
+                return _blocked.Keys.ToArray();
         }
     }
 
@@ -80,6 +81,26 @@ public sealed class WindowsFirewallController : IFirewallController
             lock (_sync)
                 return _enabled;
         }
+    }
+
+    public bool IsBlocked(string? executablePath)
+    {
+        var normalized = Normalise(executablePath);
+        if (normalized is null)
+            return false;
+
+        lock (_sync)
+            return _blocked.TryGetValue(normalized, out var flags) && flags.Any;
+    }
+
+    public bool IsBlocked(string? executablePath, FirewallDirection direction)
+    {
+        var normalized = Normalise(executablePath);
+        if (normalized is null)
+            return false;
+
+        lock (_sync)
+            return _blocked.TryGetValue(normalized, out var flags) && flags.Get(direction);
     }
 
     public FirewallChangeResult SetEnabled(bool enabled)
@@ -93,10 +114,13 @@ public sealed class WindowsFirewallController : IFirewallController
             {
                 _enabled = enabled;
 
-                foreach (var path in _blocked)
+                foreach (var (path, flags) in _blocked)
                 {
                     foreach (var direction in BothDirections)
                     {
+                        if (!flags.Get(direction))
+                            continue;
+
                         var name = FirewallRuleNames.ForPath(path, direction);
                         if (!RuleExists(Rules, name))
                             continue;
@@ -117,17 +141,19 @@ public sealed class WindowsFirewallController : IFirewallController
         }
     }
 
-    public bool IsBlocked(string? executablePath)
-    {
-        var normalized = Normalise(executablePath);
-        if (normalized is null)
-            return false;
+    public FirewallChangeResult SetBlocked(string? executablePath, FirewallDirection direction, bool blocked) =>
+        Apply(
+            executablePath,
+            inbound: direction == FirewallDirection.In ? blocked : null,
+            outbound: direction == FirewallDirection.Out ? blocked : null);
 
-        lock (_sync)
-            return _blocked.Contains(normalized);
-    }
+    public FirewallChangeResult Block(string? executablePath) =>
+        Apply(executablePath, inbound: true, outbound: true);
 
-    public FirewallChangeResult Block(string? executablePath)
+    public FirewallChangeResult Allow(string? executablePath) =>
+        Apply(executablePath, inbound: false, outbound: false);
+
+    private FirewallChangeResult Apply(string? executablePath, bool? inbound, bool? outbound)
     {
         var path = Normalise(executablePath);
         if (path is null)
@@ -136,49 +162,49 @@ public sealed class WindowsFirewallController : IFirewallController
         if (!IsAvailable)
             return FirewallChangeResult.Fail(FirewallChangeStatus.NotElevated, UnavailableReason!);
 
-        if (!File.Exists(path))
+        // Allowing an app that has been uninstalled must still remove its rules.
+        var blocking = inbound == true || outbound == true;
+        if (blocking && !File.Exists(path))
             return FirewallChangeResult.Fail(FirewallChangeStatus.InvalidPath, "The executable no longer exists on disk.");
 
         lock (_sync)
         {
             try
             {
-                var rules = Rules;
+                if (!_blocked.TryGetValue(path, out var flags))
+                    flags = new BlockFlags();
 
-                EnsureRule(rules, path, FirewallDirection.Out);
-                EnsureRule(rules, path, FirewallDirection.In);
+                if (inbound.HasValue)
+                    flags.In = inbound.Value;
 
-                _blocked.Add(path);
+                if (outbound.HasValue)
+                    flags.Out = outbound.Value;
+
+                foreach (var direction in BothDirections)
+                {
+                    var name = FirewallRuleNames.ForPath(path, direction);
+
+                    if (flags.Get(direction))
+                    {
+                        EnsureRule(Rules, path, direction);
+
+                        dynamic rule = Rules.Item(name);
+                        if ((bool)rule.Enabled != _enabled)
+                            rule.Enabled = _enabled;
+                    }
+                    else
+                    {
+                        RemoveRule(Rules, name);
+                    }
+                }
+
+                if (flags.Any)
+                    _blocked[path] = flags;
+                else
+                    _blocked.Remove(path);
+
                 SaveState();
-                return FirewallChangeResult.Ok($"Blocked internet access for {Path.GetFileName(path)} (inbound and outbound).");
-            }
-            catch (Exception ex)
-            {
-                return FirewallChangeResult.Fail(FirewallChangeStatus.Failed, Explain(ex));
-            }
-        }
-    }
-
-    public FirewallChangeResult Allow(string? executablePath)
-    {
-        var path = Normalise(executablePath);
-        if (path is null)
-            return FirewallChangeResult.Fail(FirewallChangeStatus.InvalidPath, "The executable path is not available for this process.");
-
-        if (!IsAvailable)
-            return FirewallChangeResult.Fail(FirewallChangeStatus.NotElevated, UnavailableReason!);
-
-        lock (_sync)
-        {
-            try
-            {
-                RemoveRule(Rules, FirewallRuleNames.ForPath(path, FirewallDirection.Out));
-                RemoveRule(Rules, FirewallRuleNames.ForPath(path, FirewallDirection.In));
-                RemoveRule(Rules, FirewallRuleNames.ForPath(path));
-
-                _blocked.Remove(path);
-                SaveState();
-                return FirewallChangeResult.Ok($"Allowed internet access for {Path.GetFileName(path)}.");
+                return FirewallChangeResult.Ok($"Firewall rules updated for {Path.GetFileName(path)}.");
             }
             catch (Exception ex)
             {
@@ -247,9 +273,9 @@ public sealed class WindowsFirewallController : IFirewallController
     }
 
     /// <summary>
-    /// Drops state entries whose rule no longer exists (removed from Windows Firewall UI or
-    /// by another tool) and re-applies the master switch. Only possible when elevated,
-    /// because reading rules needs admin.
+    /// Reconciles stored state with the live rules: upgrades legacy rules, creates missing
+    /// direction rules, removes rules for directions that are no longer blocked, and
+    /// re-applies the master switch. Requires elevation, because reading rules needs admin.
     /// </summary>
     private void VerifyRulesIfPossible()
     {
@@ -260,33 +286,25 @@ public sealed class WindowsFirewallController : IFirewallController
         {
             try
             {
-                var live = new List<string>(_blocked.Count);
-
-                foreach (var path in _blocked)
+                foreach (var (path, flags) in _blocked)
                 {
-                    // Rules created before inbound blocking existed have no direction suffix.
+                    // Rules created before per-direction control had no suffix.
                     RemoveRule(Rules, FirewallRuleNames.ForPath(path));
-
-                    EnsureRule(Rules, path, FirewallDirection.Out);
-                    EnsureRule(Rules, path, FirewallDirection.In);
 
                     foreach (var direction in BothDirections)
                     {
+                        if (!flags.Get(direction))
+                        {
+                            RemoveRule(Rules, FirewallRuleNames.ForPath(path, direction));
+                            continue;
+                        }
+
+                        EnsureRule(Rules, path, direction);
+
                         dynamic rule = Rules.Item(FirewallRuleNames.ForPath(path, direction));
                         if ((bool)rule.Enabled != _enabled)
                             rule.Enabled = _enabled;
                     }
-
-                    live.Add(path);
-                }
-
-                if (live.Count != _blocked.Count)
-                {
-                    _blocked.Clear();
-                    foreach (var path in live)
-                        _blocked.Add(path);
-
-                    SaveState();
                 }
             }
             catch (Exception)
@@ -323,10 +341,10 @@ public sealed class WindowsFirewallController : IFirewallController
 
             _enabled = state.Enabled;
 
-            foreach (var path in state.Blocked)
+            foreach (var entry in state.Blocked)
             {
-                if (Normalise(path) is { } normalized)
-                    _blocked.Add(normalized);
+                if (Normalise(entry.Path) is { } normalized)
+                    _blocked[normalized] = new BlockFlags { In = entry.In, Out = entry.Out };
             }
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
@@ -341,7 +359,9 @@ public sealed class WindowsFirewallController : IFirewallController
             var state = new FirewallState
             {
                 Enabled = _enabled,
-                Blocked = _blocked.ToArray()
+                Blocked = _blocked
+                    .Select(pair => new FirewallEntry(pair.Key, pair.Value.In, pair.Value.Out))
+                    .ToArray()
             };
 
             File.WriteAllText(_statePath, state.ToJson());
@@ -350,9 +370,6 @@ public sealed class WindowsFirewallController : IFirewallController
         {
         }
     }
-
-    private static bool IsComFailure(Exception ex) =>
-        ex is COMException or InvalidCastException or InvalidOperationException or UnauthorizedAccessException;
 
     private string Explain(Exception ex)
     {
@@ -363,5 +380,16 @@ public sealed class WindowsFirewallController : IFirewallController
             return "Windows denied the firewall change. Run DoorNet as administrator.";
 
         return ex.Message;
+    }
+
+    private sealed class BlockFlags
+    {
+        public bool In;
+        public bool Out;
+
+        public bool Any => In || Out;
+
+        public bool Get(FirewallDirection direction) =>
+            direction == FirewallDirection.In ? In : Out;
     }
 }
