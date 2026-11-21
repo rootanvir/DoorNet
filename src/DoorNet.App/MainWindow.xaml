@@ -369,6 +369,14 @@
                                                                         </Style>
                                                                     </TextBlock.Style>
                                                                 </TextBlock>
+                                                                <TextBlock Text="{Binding DownloadTotalText}"
+                                                                           FontSize="10"
+                                                                           Width="56"
+                                                                           TextAlignment="Right"
+                                                                           VerticalAlignment="Center"
+                                                                           Foreground="{StaticResource TextMutedBrush}"
+                                                                           Margin="6,0,0,0"
+                                                                           ToolTip="Downloaded since DoorNet started" />
                                                             </StackPanel>
 
                                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" Margin="0,3,0,0">
@@ -400,6 +408,14 @@
                                                                         </Style>
                                                                     </TextBlock.Style>
                                                                 </TextBlock>
+                                                                <TextBlock Text="{Binding UploadTotalText}"
+                                                                           FontSize="10"
+                                                                           Width="56"
+                                                                           TextAlignment="Right"
+                                                                           VerticalAlignment="Center"
+                                                                           Foreground="{StaticResource TextMutedBrush}"
+                                                                           Margin="6,0,0,0"
+                                                                           ToolTip="Uploaded since DoorNet started" />
                                                             </StackPanel>
                                                         </StackPanel>
 

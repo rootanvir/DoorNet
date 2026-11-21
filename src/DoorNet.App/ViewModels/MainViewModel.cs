@@ -28,6 +28,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly IPerAppUsageSource _perAppSource;
     private readonly ThroughputSampler _sampler = new();
     private readonly RingBuffer<ThroughputPoint> _history = new(HistoryCapacity);
+    private readonly UsageTotals _usageTotals = new();
     private readonly DispatcherTimer _timer;
 
     private bool _tickRunning;
@@ -84,7 +85,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             : "Standard user · aggregate counters only";
 
         PerAppNote = _perAppSource.IsAvailable
-            ? "Per-app bytes measured by the kernel ETW session (NetworkTCPIP)."
+            ? "Per-app rates and totals come from the kernel ETW session; totals reset with the session."
             : $"Per-app bytes unavailable: {_perAppSource.UnavailableReason ?? "unknown reason."}";
 
         _timer = new DispatcherTimer(DispatcherPriority.Background)
@@ -244,13 +245,23 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         var traffic = _perAppSource.Drain();
         var aggregated = AppUsageAggregator.Aggregate(connections, traffic);
+        var showMeters = _perAppSource.IsAvailable;
 
-        // With byte usage available, "top" means bytes moved; otherwise the best we can
-        // honestly show is how many active sockets a process holds.
-        var ordered = _perAppSource.IsAvailable
+        if (showMeters)
+        {
+            var now = DateTime.UtcNow;
+            foreach (var app in aggregated)
+                _usageTotals.Add(app, now);
+
+            _usageTotals.Prune(now, TimeSpan.FromMinutes(10));
+        }
+
+        // With byte usage available, "top" means data consumed this session (stable order,
+        // no row dancing every second). Without it, the best honest signal is socket count.
+        var ordered = showMeters
             ? aggregated
-                .OrderByDescending(a => a.BytesSent + a.BytesReceived)
-                .ThenByDescending(a => a.ActiveConnectionCount)
+                .OrderByDescending(SessionBytes)
+                .ThenByDescending(a => a.BytesReceived + a.BytesSent)
             : aggregated
                 .OrderByDescending(a => a.ActiveConnectionCount)
                 .ThenByDescending(a => a.ConnectionCount);
@@ -265,15 +276,18 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         var maxDownload = rates.Count == 0 ? 0 : rates.Max(r => r.Download);
         var maxUpload = rates.Count == 0 ? 0 : rates.Max(r => r.Upload);
-        var showMeters = _perAppSource.IsAvailable;
 
         var apps = new List<AppRow>(usage.Count);
         for (var i = 0; i < usage.Count; i++)
         {
+            var (totalDownload, totalUpload) = _usageTotals.Get(usage[i].ProcessId, usage[i].ProcessName);
+
             apps.Add(ToAppRow(
                 usage[i],
                 rates[i].Download,
                 rates[i].Upload,
+                totalDownload,
+                totalUpload,
                 maxDownload,
                 maxUpload,
                 showMeters));
@@ -299,6 +313,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         AppUsage app,
         double downloadRate,
         double uploadRate,
+        long totalDownload,
+        long totalUpload,
         double maxDownload,
         double maxUpload,
         bool showMeters)
@@ -333,6 +349,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             detail,
             downloadIdle ? "0" : ByteFormatter.FormatRate(downloadRate),
             uploadIdle ? "0" : ByteFormatter.FormatRate(uploadRate),
+            showMeters ? ByteFormatter.FormatBytes(totalDownload) : string.Empty,
+            showMeters ? ByteFormatter.FormatBytes(totalUpload) : string.Empty,
             MeterMath.Scale(downloadRate, maxDownload),
             MeterMath.Scale(uploadRate, maxUpload),
             downloadIdle,
@@ -392,10 +410,17 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+    private long SessionBytes(AppUsage app)
+    {
+        var (download, upload) = _usageTotals.Get(app.ProcessId, app.ProcessName);
+        return download + upload;
+    }
+
     private void ResetSession()
     {
         _sampler.Reset();
         _history.Clear();
+        _usageTotals.Clear();
         _peakDown = 0;
         _peakUp = 0;
 

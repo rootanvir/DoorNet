@@ -48,6 +48,7 @@ byte formatting, per-app aggregation, traffic-only rows, and loopback filtering.
 | 90 s throughput chart | In-memory ring buffer, custom-drawn WPF control | none |
 | Top applications | `GetExtendedTcpTable` / `GetExtendedUdpTable` grouped by owning PID | none |
 | Per-app byte rates | Kernel ETW, `Microsoft-Windows-Kernel-Network` (`NetworkTCPIP`) | **admin** |
+| Per-app data totals | Accumulated per `(pid, image)` for the session, shown beside each rate | **admin** |
 | Live connections | Same tables (IPv4 + IPv6, TCP + UDP) | none |
 
 Three deliberate correctness decisions:

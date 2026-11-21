@@ -38,6 +38,8 @@ public sealed record AppRow(
     string DetailText,
     string DownloadText,
     string UploadText,
+    string DownloadTotalText,
+    string UploadTotalText,
     double DownloadScale,
     double UploadScale,
     bool DownloadIdle,
