@@ -11,6 +11,7 @@ public sealed record ConnectionRow(
     string Remote,
     string State,
     Brush StateBrush,
+    ImageSource? Icon,
     string Tooltip)
 {
     public static readonly Brush LiveBrush = Frozen("#35E08E");
@@ -32,12 +33,17 @@ public sealed record AppRow(
     string Name,
     string Initial,
     Brush Accent,
+    ImageSource? Icon,
     string ConnectionsText,
     string DetailText,
     string TrafficText,
     bool HasTraffic,
     bool IsActive,
-    string Tooltip);
+    string Tooltip)
+{
+    /// <summary>False for protected processes the shell cannot give us an image for.</summary>
+    public bool HasIcon => Icon is not null;
+}
 
 /// <summary>Deterministic accent colours so an app keeps the same badge across runs.</summary>
 public static class AccentPalette

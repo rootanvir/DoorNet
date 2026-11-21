@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Windows;
 using System.Windows.Threading;
 using DoorNet.App.Collections;
+using DoorNet.App.Platform;
 using DoorNet.Capture;
 using DoorNet.Core.Abstractions;
 using DoorNet.Core.Aggregation;
@@ -263,6 +264,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             connection.RemoteEndpoint,
             connection.State,
             BrushForState(connection.State),
+            AppIcons.ForExecutable(connection.ExecutablePath),
             connection.ExecutablePath ?? $"PID {connection.ProcessId}");
 
     private AppRow ToAppRow(AppUsage app)
@@ -294,6 +296,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             app.ProcessName,
             app.Initial,
             AccentPalette.For(app.ProcessName),
+            AppIcons.ForExecutable(app.ExecutablePath),
             connectionsText,
             detail,
             trafficText,
