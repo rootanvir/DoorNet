@@ -94,11 +94,17 @@ with its live rate, and the per-app number tracks adapter throughput once the 1 
 
 ## Blocking an application
 
-Right-click an application (in **Top applications** or **Live connections**) and choose
-**Block internet access**. DoorNet adds one outbound **block** rule to Windows Defender
-Firewall for that executable, tagged `Grouping = "DoorNet"`; **Allow internet access**
-removes it. The app shows a red lock beside blocked processes, and the list of blocked
-paths persists across restarts in `%LocalAppData%\DoorNet\firewall.json`.
+Every application row has a **padlock button at its far left** (and a right-click menu):
+open padlock = allowed, closed red padlock = blocked. Clicking it adds or removes one
+outbound **block** rule in Windows Defender Firewall for that executable, tagged
+`Grouping = "DoorNet"`. Blocked paths persist in `%LocalAppData%\DoorNet\firewall.json`.
+
+The header carries the **master switch** — `Firewall ON` / `Firewall OFF`:
+
+- **ON** applies every DoorNet rule; individual blocks work normally.
+- **OFF** leaves the rules defined but *disabled* (Windows Firewall shows `Enabled: No`),
+  so all apps can connect again without losing your block list. Per-app blocks are refused
+  while the master switch is off.
 
 Why rules instead of a driver: GlassWire ships its own WFP driver (`gwdrv.sys`) to enforce
 its firewall. DoorNet deliberately does not — an OS rule needs no kernel component, survives

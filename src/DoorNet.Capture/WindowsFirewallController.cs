@@ -1,6 +1,5 @@
 using System.IO;
 using System.Runtime.InteropServices;
-using System.Text.Json;
 using DoorNet.Core.Firewall;
 
 namespace DoorNet.Capture;
@@ -31,6 +30,7 @@ public sealed class WindowsFirewallController : IFirewallController
     private object? _policy;
     private object? _rules;
     private bool _comUnavailable;
+    private bool _enabled = true;
 
     public WindowsFirewallController()
     {
@@ -66,6 +66,47 @@ public sealed class WindowsFirewallController : IFirewallController
         {
             lock (_sync)
                 return _blocked.ToArray();
+        }
+    }
+
+    public bool IsEnabled
+    {
+        get
+        {
+            lock (_sync)
+                return _enabled;
+        }
+    }
+
+    public FirewallChangeResult SetEnabled(bool enabled)
+    {
+        if (!IsAvailable)
+            return FirewallChangeResult.Fail(FirewallChangeStatus.NotElevated, UnavailableReason!);
+
+        lock (_sync)
+        {
+            try
+            {
+                _enabled = enabled;
+
+                foreach (var path in _blocked)
+                {
+                    var name = FirewallRuleNames.ForPath(path);
+                    if (!RuleExists(Rules, name))
+                        continue;
+
+                    dynamic rule = Rules.Item(name);
+                    rule.Enabled = enabled;
+                }
+
+                SaveState();
+                return FirewallChangeResult.Ok(enabled ? "Firewall rules enabled." : "Firewall rules suspended.");
+            }
+            catch (Exception ex)
+            {
+                _enabled = !enabled;
+                return FirewallChangeResult.Fail(FirewallChangeStatus.Failed, Explain(ex));
+            }
         }
     }
 
@@ -106,7 +147,7 @@ public sealed class WindowsFirewallController : IFirewallController
                     rule.Grouping = FirewallRuleNames.Group;
                     rule.Direction = RuleDirectionOut;
                     rule.Action = RuleActionBlock;
-                    rule.Enabled = true;
+                    rule.Enabled = _enabled;
                     rule.InterfaceTypes = "All";
                     rule.Profiles = ProfileAll;
                     rule.Protocol = ProtocolAny;
@@ -188,7 +229,8 @@ public sealed class WindowsFirewallController : IFirewallController
 
     /// <summary>
     /// Drops state entries whose rule no longer exists (removed from Windows Firewall UI or
-    /// by another tool). Only possible when elevated, because reading rules needs admin.
+    /// by another tool) and re-applies the master switch. Only possible when elevated,
+    /// because reading rules needs admin.
     /// </summary>
     private void VerifyRulesIfPossible()
     {
@@ -199,7 +241,20 @@ public sealed class WindowsFirewallController : IFirewallController
         {
             try
             {
-                var live = _blocked.Where(path => RuleExists(Rules, FirewallRuleNames.ForPath(path))).ToList();
+                var live = new List<string>(_blocked.Count);
+
+                foreach (var path in _blocked)
+                {
+                    var name = FirewallRuleNames.ForPath(path);
+                    if (!RuleExists(Rules, name))
+                        continue;
+
+                    dynamic rule = Rules.Item(name);
+                    if ((bool)rule.Enabled != _enabled)
+                        rule.Enabled = _enabled;
+
+                    live.Add(path);
+                }
 
                 if (live.Count != _blocked.Count)
                 {
@@ -240,17 +295,17 @@ public sealed class WindowsFirewallController : IFirewallController
             if (!File.Exists(_statePath))
                 return;
 
-            var paths = JsonSerializer.Deserialize<string[]>(File.ReadAllText(_statePath));
-            if (paths is null)
-                return;
+            var state = FirewallState.Parse(File.ReadAllText(_statePath));
 
-            foreach (var path in paths)
+            _enabled = state.Enabled;
+
+            foreach (var path in state.Blocked)
             {
                 if (Normalise(path) is { } normalized)
                     _blocked.Add(normalized);
             }
         }
-        catch (Exception ex) when (ex is IOException or JsonException or UnauthorizedAccessException)
+        catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {
         }
     }
@@ -259,9 +314,13 @@ public sealed class WindowsFirewallController : IFirewallController
     {
         try
         {
-            File.WriteAllText(
-                _statePath,
-                JsonSerializer.Serialize(_blocked.ToArray(), new JsonSerializerOptions { WriteIndented = true }));
+            var state = new FirewallState
+            {
+                Enabled = _enabled,
+                Blocked = _blocked.ToArray()
+            };
+
+            File.WriteAllText(_statePath, state.ToJson());
         }
         catch (Exception ex) when (ex is IOException or UnauthorizedAccessException)
         {

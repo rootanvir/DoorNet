@@ -86,6 +86,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _theme = ThemeManager.Current;
         ToggleThemeCommand = new RelayCommand(ToggleTheme);
         ToggleBlockCommand = new RelayCommand<object?>(ToggleBlock);
+        ToggleFirewallCommand = new RelayCommand(ToggleFirewall);
 
         CanOfferElevation = !Environment.IsPrivilegedProcess;
 
@@ -115,6 +116,16 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public RelayCommand RestartElevatedCommand { get; }
     public RelayCommand ToggleThemeCommand { get; }
     public RelayCommand<object?> ToggleBlockCommand { get; }
+    public RelayCommand ToggleFirewallCommand { get; }
+
+    /// <summary>Master switch for every DoorNet firewall rule.</summary>
+    public bool IsFirewallEnabled => _firewall.IsEnabled;
+
+    public string FirewallStateText => IsFirewallEnabled ? "Firewall ON" : "Firewall OFF";
+
+    public string FirewallTooltip => IsFirewallEnabled
+        ? "DoorNet firewall rules are active. Click to suspend all of them."
+        : "DoorNet firewall rules are suspended. Click to enable them.";
 
     /// <summary>Raised after the palette changes so the window can restyle its native chrome.</summary>
     public event EventHandler? ThemeChanged;
@@ -458,6 +469,17 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
+        if (!_firewall.IsEnabled)
+        {
+            MessageBox.Show(
+                "The DoorNet firewall is off, so new rules would have no effect.\n\n" +
+                "Turn it on from the header (Firewall OFF), then block this application.",
+                "Block internet access",
+                MessageBoxButton.OK,
+                MessageBoxImage.Information);
+            return;
+        }
+
         var isBlocked = _firewall.IsBlocked(path);
 
         if (!isBlocked)
@@ -483,6 +505,37 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
 
         // Rebuild the rows now instead of waiting up to a second for the next tick.
+        _ = TickAsync();
+    }
+
+    private void ToggleFirewall()
+    {
+        if (!_firewall.IsAvailable)
+        {
+            var elevate = MessageBox.Show(
+                $"{_firewall.UnavailableReason}\n\nRestart DoorNet with administrator rights now?",
+                "DoorNet firewall",
+                MessageBoxButton.YesNo,
+                MessageBoxImage.Warning);
+
+            if (elevate == MessageBoxResult.Yes)
+                RestartElevated();
+
+            return;
+        }
+
+        var result = _firewall.SetEnabled(!_firewall.IsEnabled);
+
+        if (!result.Succeeded)
+        {
+            MessageBox.Show(result.Message, "DoorNet firewall", MessageBoxButton.OK, MessageBoxImage.Warning);
+            return;
+        }
+
+        OnPropertyChanged(nameof(IsFirewallEnabled));
+        OnPropertyChanged(nameof(FirewallStateText));
+        OnPropertyChanged(nameof(FirewallTooltip));
+
         _ = TickAsync();
     }
 

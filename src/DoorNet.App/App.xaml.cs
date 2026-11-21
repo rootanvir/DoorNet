@@ -20,15 +20,22 @@ public partial class App : Application
         // Per-app byte usage and firewall rules both need administrator rights. Elevating
         // at launch means the dashboard is complete from the first tick instead of showing
         // sockets until the user happens to block something. Cancelling UAC simply keeps
-        // the limited, unprivileged view.
-        if (settings.AutoElevate && !Environment.IsPrivilegedProcess && TryRelaunchElevated())
+        // the limited, unprivileged view; --no-elevate skips the prompt entirely.
+        var skipElevation = e.Args.Any(arg =>
+            string.Equals(arg, "--no-elevate", StringComparison.OrdinalIgnoreCase));
+
+        if (!skipElevation && settings.AutoElevate && !Environment.IsPrivilegedProcess && TryRelaunchElevated())
         {
-            StartupUri = null;
             Shutdown();
             return;
         }
 
         base.OnStartup(e);
+
+        // No StartupUri: the window is created here so a relaunch can exit before it exists.
+        var window = new MainWindow();
+        MainWindow = window;
+        window.Show();
 
         DispatcherUnhandledException += OnDispatcherUnhandledException;
     }

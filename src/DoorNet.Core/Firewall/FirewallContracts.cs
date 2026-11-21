@@ -28,10 +28,16 @@ public interface IFirewallController
 
     string? UnavailableReason { get; }
 
+    /// <summary>Master switch. When false, DoorNet's rules stay defined but are disabled.</summary>
+    bool IsEnabled { get; }
+
     /// <summary>Executable paths currently blocked, normalised to full paths.</summary>
     IReadOnlyCollection<string> BlockedPaths { get; }
 
     bool IsBlocked(string? executablePath);
+
+    /// <summary>Turns every DoorNet rule on or off without losing the blocked list.</summary>
+    FirewallChangeResult SetEnabled(bool enabled);
 
     FirewallChangeResult Block(string? executablePath);
 
