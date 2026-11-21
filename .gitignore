@@ -1,0 +1,21 @@
+# Build output
+bin/
+obj/
+artifacts/
+.vs/
+
+# User/IDE files
+*.user
+*.suo
+*.DotSettings.user
+
+# Test results
+TestResults/
+coverage*.xml
+coverage*.json
+
+# Reference material: large installers and Ghidra exports, not source
+reverse.eng/
+
+# Local screenshots
+*.tmp.png
