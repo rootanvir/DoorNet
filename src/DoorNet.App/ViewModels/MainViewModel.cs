@@ -486,7 +486,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         {
             var confirm = MessageBox.Show(
                 $"Block internet access for {name}?\n\n" +
-                $"This adds a Windows Firewall outbound rule for:\n{path}\n\n" +
+                $"This adds Windows Firewall inbound and outbound block rules for:\n{path}\n\n" +
                 "You can allow it again from DoorNet (right-click → Allow internet access).",
                 "Block internet access",
                 MessageBoxButton.YesNo,
