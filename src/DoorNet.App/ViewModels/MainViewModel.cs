@@ -140,6 +140,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public string CaptureButtonLabel { get => _captureButtonLabel; private set => SetProperty(ref _captureButtonLabel, value); }
     public string ElevationNote { get; }
     public string PerAppNote { get; }
+
+    /// <summary>True when the app is unelevated, so per-app meters can be enabled by UAC.</summary>
+    public bool ShowEnableMeters => !_perAppSource.IsAvailable && !Environment.IsPrivilegedProcess;
     public string VersionText => "DoorNet 0.1 · skeleton";
 
     public int ConnectionCount { get => _connectionCount; private set => SetProperty(ref _connectionCount, value); }

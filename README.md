@@ -5,9 +5,9 @@ the machine's real connection list, light/dark themes, and one-click internet bl
 per application.
 
 **Status: milestone 3 + firewall.** The app builds, runs unprivileged, and shows real OS
-data. Per-application byte usage is measured by an in-process kernel ETW session when the
-app is elevated (one click from the header); unelevated it says exactly why it can't.
-Blocking uses Windows Defender Firewall rules and therefore also needs elevation.
+data. On launch it asks for elevation once (UAC) because per-application byte usage and
+firewall control need administrator rights; cancelling keeps the limited view with an
+**Enable per-app meters** button in the applications card.
 
 ![DoorNet running](docs/screenshot.png)
 
@@ -32,9 +32,12 @@ dotnet run --project src/DoorNet.App
 Or use the launcher (builds first, then starts):
 
 ```powershell
-.\run.cmd              # normal
-.\run.cmd elevated     # through UAC, for per-app bytes + firewall control
+.\run.cmd
 ```
+
+The app relaunches itself through UAC on startup so per-app meters and firewall control work
+immediately; dismissing the prompt keeps the unprivileged view. Disable that with
+`"AutoElevate": false` in `%LocalAppData%\DoorNet\settings.json`.
 
 Manual equivalent:
 

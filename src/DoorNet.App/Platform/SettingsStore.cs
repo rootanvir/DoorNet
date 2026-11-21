@@ -6,6 +6,12 @@ namespace DoorNet.App.Platform;
 public sealed class AppSettings
 {
     public string Theme { get; set; } = "Dark";
+
+    /// <summary>
+    /// Relaunch through UAC on startup. Per-app byte usage (kernel ETW) and firewall rules
+    /// need administrator rights; set to false to always start unprivileged.
+    /// </summary>
+    public bool AutoElevate { get; set; } = true;
 }
 
 /// <summary>Small JSON store for UI preferences under %LocalAppData%\DoorNet.</summary>

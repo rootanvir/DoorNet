@@ -274,6 +274,16 @@
 
                         <Grid>
                             <TextBlock Text="Top applications" Style="{StaticResource SectionTitle}" />
+                            <Button Content="Enable per-app meters"
+                                    Command="{Binding RestartElevatedCommand}"
+                                    Style="{StaticResource GhostButton}"
+                                    FontSize="10"
+                                    Padding="8,3"
+                                    HorizontalAlignment="Right"
+                                    Margin="0,0,64,0"
+                                    VerticalAlignment="Center"
+                                    ToolTip="Relaunch with administrator rights to measure per-app bytes"
+                                    Visibility="{Binding ShowEnableMeters, Converter={StaticResource BoolToVis}}" />
                             <TextBlock HorizontalAlignment="Right" VerticalAlignment="Center" Style="{StaticResource Caption}">
                                 <Run Text="{Binding AppCount, Mode=OneWay}" />
                                 <Run Text=" apps" />
