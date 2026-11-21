@@ -95,9 +95,14 @@ with its live rate, and the per-app number tracks adapter throughput once the 1 
 ## Blocking an application
 
 Every application row has **two status pills** — `IN CONNECTIONS` and `OUT CONNECTIONS` —
-showing **Allowed** (green with a check) or **Blocked** (red). Click a pill to toggle that
-direction for that executable. Rules are grouped `DoorNet` in Windows Defender Firewall and
-the per-direction state persists in `%LocalAppData%\DoorNet\firewall.json`.
+showing **Allowed** (green with a check) or **Blocked** (red). **In is the download
+direction, Out is the upload direction.** Click a pill to toggle that direction for that
+executable. Rules are grouped `DoorNet` in Windows Defender Firewall and the per-direction
+state persists in `%LocalAppData%\DoorNet\firewall.json`.
+
+Windows Firewall is stateful, so blocking **Out** also stops new downloads (the request can
+never leave), while blocking **In** stops unsolicited incoming traffic — downloads the app
+initiated still return. Allow both directions to restore an app completely.
 
 The header carries the **master switch** — `Firewall ON` / `Firewall OFF`:
 
