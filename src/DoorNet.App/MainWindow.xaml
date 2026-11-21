@@ -340,19 +340,13 @@
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="38" />
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="92" />
-                                    <ColumnDefinition Width="98" />
+                                    <ColumnDefinition Width="86" />
+                                    <ColumnDefinition Width="86" />
                                     <ColumnDefinition Width="186" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Grid.ColumnSpan="2" Text="APPLICATION" Style="{StaticResource TableHeader}" />
-                                <StackPanel Grid.Column="2" VerticalAlignment="Bottom" ToolTip="Inbound connections — the download direction. Click a row's pill to block or allow them.">
-                                    <TextBlock Text="IN CONNECTIONS" Style="{StaticResource TableHeader}" HorizontalAlignment="Center" />
-                                    <TextBlock Text="download &#x2193;" FontSize="8" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" Margin="0,1,0,0" />
-                                </StackPanel>
-                                <StackPanel Grid.Column="3" VerticalAlignment="Bottom" ToolTip="Outbound connections — the upload direction. Click a row's pill to block or allow them.">
-                                    <TextBlock Text="OUT CONNECTIONS" Style="{StaticResource TableHeader}" HorizontalAlignment="Center" />
-                                    <TextBlock Text="upload &#x2191;" FontSize="8" Foreground="{DynamicResource TextMutedBrush}" HorizontalAlignment="Center" Margin="0,1,0,0" />
-                                </StackPanel>
+                                <TextBlock Grid.Column="2" Text="DOWNLOAD" Style="{StaticResource TableHeader}" TextAlignment="Center" ToolTip="Download direction (inbound). Click the pill to block or allow it." />
+                                <TextBlock Grid.Column="3" Text="UPLOAD" Style="{StaticResource TableHeader}" TextAlignment="Center" ToolTip="Upload direction (outbound). Click the pill to block or allow it." />
                                 <Grid Grid.Column="4">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="64" />
@@ -378,8 +372,8 @@
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="38" />
                                                         <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="92" />
-                                                        <ColumnDefinition Width="98" />
+                                                        <ColumnDefinition Width="86" />
+                                                        <ColumnDefinition Width="86" />
                                                         <ColumnDefinition Width="186" />
                                                     </Grid.ColumnDefinitions>
 
@@ -458,7 +452,7 @@
                                                             Command="{Binding DataContext.ToggleInboundCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                             CommandParameter="{Binding}"
                                                             IsEnabled="{Binding DataContext.IsFirewallEnabled, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                            ToolTip="Toggle inbound (download) connections">
+                                                            ToolTip="Toggle download (inbound) connections">
                                                         <Button.Style>
                                                             <Style TargetType="Button" BasedOn="{StaticResource PillButton}">
                                                                 <Style.Triggers>
@@ -498,7 +492,7 @@
                                                             Command="{Binding DataContext.ToggleOutboundCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                                                             CommandParameter="{Binding}"
                                                             IsEnabled="{Binding DataContext.IsFirewallEnabled, RelativeSource={RelativeSource AncestorType=Window}}"
-                                                            ToolTip="Toggle outbound (upload) connections">
+                                                            ToolTip="Toggle upload (outbound) connections">
                                                         <Button.Style>
                                                             <Style TargetType="Button" BasedOn="{StaticResource PillButton}">
                                                                 <Style.Triggers>
