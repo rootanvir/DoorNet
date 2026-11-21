@@ -264,7 +264,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             connection.RemoteEndpoint,
             connection.State,
             BrushForState(connection.State),
-            AppIcons.ForExecutable(connection.ExecutablePath),
+            AppIcons.ForProcess(connection.ExecutablePath, connection.ProcessName),
             connection.ExecutablePath ?? $"PID {connection.ProcessId}");
 
     private AppRow ToAppRow(AppUsage app)
@@ -296,7 +296,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             app.ProcessName,
             app.Initial,
             AccentPalette.For(app.ProcessName),
-            AppIcons.ForExecutable(app.ExecutablePath),
+            AppIcons.ForProcess(app.ExecutablePath, app.ProcessName),
             connectionsText,
             detail,
             trafficText,

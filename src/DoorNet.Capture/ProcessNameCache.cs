@@ -1,5 +1,7 @@
 using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.InteropServices;
+using System.Text;
 
 namespace DoorNet.Capture;
 
@@ -57,11 +59,38 @@ internal sealed class ProcessNameCache
                 // Protected process (EDR, anti-cheat, session 0): name only.
             }
 
+            // SYSTEM/PPL processes deny MainModule even to admins. The limited-information
+            // query is allowed for more of them and is enough to locate the image.
+            path ??= QueryImagePath(processId);
+
             return (FriendlyName(name, path), path);
         }
         catch (Exception ex) when (ex is ArgumentException or InvalidOperationException)
         {
             return ($"PID {processId}", null);
+        }
+    }
+
+    private static string? QueryImagePath(int processId)
+    {
+        const int processQueryLimitedInformation = 0x1000;
+
+        var handle = OpenProcess(processQueryLimitedInformation, false, processId);
+        if (handle == IntPtr.Zero)
+            return null;
+
+        try
+        {
+            var capacity = 1024;
+            var buffer = new StringBuilder(capacity);
+            if (!QueryFullProcessImageName(handle, 0, buffer, ref capacity))
+                return null;
+
+            return buffer.ToString();
+        }
+        finally
+        {
+            CloseHandle(handle);
         }
     }
 
@@ -84,4 +113,17 @@ internal sealed class ProcessNameCache
     }
 
     private readonly record struct Entry(string Name, string? Path, DateTime ResolvedAt);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern IntPtr OpenProcess(int desiredAccess, bool inheritHandle, int processId);
+
+    [DllImport("kernel32.dll", CharSet = CharSet.Unicode, SetLastError = true)]
+    private static extern bool QueryFullProcessImageName(
+        IntPtr process,
+        int flags,
+        StringBuilder exeName,
+        ref int size);
+
+    [DllImport("kernel32.dll", SetLastError = true)]
+    private static extern bool CloseHandle(IntPtr handle);
 }
