@@ -85,7 +85,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         RestartElevatedCommand = new RelayCommand(RestartElevated);
         _theme = ThemeManager.Current;
         ToggleThemeCommand = new RelayCommand(ToggleTheme);
-        ToggleBlockCommand = new RelayCommand<object?>(ToggleBlock);
         ToggleInboundCommand = new RelayCommand<object?>(row => ToggleDirection(row, FirewallDirection.In));
         ToggleOutboundCommand = new RelayCommand<object?>(row => ToggleDirection(row, FirewallDirection.Out));
         ToggleFirewallCommand = new RelayCommand(ToggleFirewall);
@@ -117,7 +116,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public RelayCommand ResetSessionCommand { get; }
     public RelayCommand RestartElevatedCommand { get; }
     public RelayCommand ToggleThemeCommand { get; }
-    public RelayCommand<object?> ToggleBlockCommand { get; }
     public RelayCommand<object?> ToggleInboundCommand { get; }
     public RelayCommand<object?> ToggleOutboundCommand { get; }
     public RelayCommand ToggleFirewallCommand { get; }
@@ -348,9 +346,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             TooltipFor(connection.ExecutablePath, connection.ProcessId));
 
     private static string TooltipFor(string? executablePath, int processId) =>
-        executablePath is null
-            ? $"PID {processId}"
-            : $"{executablePath}\nRight-click to block or allow internet access";
+        executablePath ?? $"PID {processId}";
 
     private AppRow ToAppRow(
         AppUsage app,
@@ -490,84 +486,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _ = TickAsync();
     }
 
-    private void ToggleBlock(object? parameter)
-    {
-        var path = parameter switch
-        {
-            AppRow app => app.ExecutablePath,
-            ConnectionRow connection => connection.ExecutablePath,
-            _ => null
-        };
-
-        var name = parameter switch
-        {
-            AppRow app => app.Name,
-            ConnectionRow connection => connection.ProcessName,
-            _ => "this application"
-        };
-
-        if (path is null)
-        {
-            MessageBox.Show(
-                "DoorNet cannot read this process's executable path, so it cannot create a firewall rule for it.",
-                "Block internet access",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-            return;
-        }
-
-        if (!_firewall.IsAvailable)
-        {
-            var elevate = MessageBox.Show(
-                $"{_firewall.UnavailableReason}\n\nRestart DoorNet with administrator rights now?",
-                "Block internet access",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-
-            if (elevate == MessageBoxResult.Yes)
-                RestartElevated();
-
-            return;
-        }
-
-        if (!_firewall.IsEnabled)
-        {
-            MessageBox.Show(
-                "The DoorNet firewall is off, so new rules would have no effect.\n\n" +
-                "Turn it on from the header (Firewall OFF), then block this application.",
-                "Block internet access",
-                MessageBoxButton.OK,
-                MessageBoxImage.Information);
-            return;
-        }
-
-        var isBlocked = _firewall.IsBlocked(path);
-
-        if (!isBlocked)
-        {
-            var confirm = MessageBox.Show(
-                $"Block internet access for {name}?\n\n" +
-                $"This adds Windows Firewall inbound and outbound block rules for:\n{path}\n\n" +
-                "You can allow it again from DoorNet (right-click → Allow internet access).",
-                "Block internet access",
-                MessageBoxButton.YesNo,
-                MessageBoxImage.Warning);
-
-            if (confirm != MessageBoxResult.Yes)
-                return;
-        }
-
-        var result = isBlocked ? _firewall.Allow(path) : _firewall.Block(path);
-
-        if (!result.Succeeded)
-        {
-            MessageBox.Show(result.Message, "DoorNet firewall", MessageBoxButton.OK, MessageBoxImage.Warning);
-            return;
-        }
-
-        // Rebuild the rows now instead of waiting up to a second for the next tick.
-        _ = TickAsync();
-    }
 
     private void ToggleFirewall()
     {

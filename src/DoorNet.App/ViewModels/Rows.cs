@@ -16,9 +16,6 @@ public sealed record ConnectionRow(
     bool IsBlocked,
     string Tooltip)
 {
-    public bool CanBlock => ExecutablePath is not null;
-
-    public string BlockMenuHeader => IsBlocked ? "Allow internet access" : "Block internet access";
     public static readonly Brush LiveBrush = Frozen("#35E08E");
     public static readonly Brush ListenBrush = Frozen("#5B8FB9");
     public static readonly Brush IdleBrush = Frozen("#5A6C7E");
@@ -60,10 +57,6 @@ public sealed record AppRow(
 {
     /// <summary>False for protected processes the shell cannot give us an image for.</summary>
     public bool HasIcon => Icon is not null;
-
-    public bool CanBlock => ExecutablePath is not null;
-
-    public string BlockMenuHeader => IsBlocked ? "Allow internet access" : "Block internet access";
 
     public string InStateText => InBlocked ? "Blocked" : "Allowed";
 

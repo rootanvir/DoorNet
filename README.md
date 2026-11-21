@@ -96,9 +96,8 @@ with its live rate, and the per-app number tracks adapter throughput once the 1 
 
 Every application row has **two status pills** — `IN CONNECTIONS` and `OUT CONNECTIONS` —
 showing **Allowed** (green with a check) or **Blocked** (red). Click a pill to toggle that
-direction for that executable; the padlock at the far left blocks or allows **both**
-directions at once (with a confirmation). Rules are grouped `DoorNet` in Windows Defender
-Firewall and the per-direction state persists in `%LocalAppData%\DoorNet\firewall.json`.
+direction for that executable. Rules are grouped `DoorNet` in Windows Defender Firewall and
+the per-direction state persists in `%LocalAppData%\DoorNet\firewall.json`.
 
 The header carries the **master switch** — `Firewall ON` / `Firewall OFF`:
 
