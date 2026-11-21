@@ -31,6 +31,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly ThroughputSampler _sampler = new();
     private readonly RingBuffer<ThroughputPoint> _history = new(HistoryCapacity);
     private readonly UsageTotals _usageTotals = new();
+    private readonly HashSet<string> _expanded = new(StringComparer.Ordinal);
     private readonly DispatcherTimer _timer;
 
     private bool _tickRunning;
@@ -87,6 +88,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         ToggleThemeCommand = new RelayCommand(ToggleTheme);
         ToggleInboundCommand = new RelayCommand<object?>(row => ToggleDirection(row, FirewallDirection.In));
         ToggleOutboundCommand = new RelayCommand<object?>(row => ToggleDirection(row, FirewallDirection.Out));
+        ToggleExpandCommand = new RelayCommand<object?>(ToggleExpand);
         ToggleFirewallCommand = new RelayCommand(ToggleFirewall);
 
         CanOfferElevation = !Environment.IsPrivilegedProcess;
@@ -109,7 +111,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _ = TickAsync();
     }
 
-    public ObservableCollection<ConnectionRow> Connections { get; } = [];
+    public ObservableCollection<ConnectionGroupRow> Connections { get; } = [];
     public ObservableCollection<AppRow> Apps { get; } = [];
 
     public RelayCommand ToggleCaptureCommand { get; }
@@ -118,6 +120,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public RelayCommand ToggleThemeCommand { get; }
     public RelayCommand<object?> ToggleInboundCommand { get; }
     public RelayCommand<object?> ToggleOutboundCommand { get; }
+    public RelayCommand<object?> ToggleExpandCommand { get; }
     public RelayCommand ToggleFirewallCommand { get; }
 
     /// <summary>Master switch for every DoorNet firewall rule.</summary>
@@ -265,16 +268,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     private void ApplyConnections(IReadOnlyList<ConnectionInfo> connections)
     {
-        var rows = connections
-            .Where(c => c.RemotePort != 0 || c.IsListening)
-            .OrderBy(c => StatePriority(c.State))
-            .ThenBy(c => c.ProcessName, StringComparer.OrdinalIgnoreCase)
-            .ThenBy(c => c.RemoteEndpoint, StringComparer.Ordinal)
-            .Take(MaxConnectionRows)
-            .Select(ToRow)
-            .ToList();
-
-        RowSync.Apply(Connections, rows, r => r.Key);
         ConnectionCount = connections.Count;
 
         var traffic = _perAppSource.Drain();
@@ -290,46 +283,124 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             _usageTotals.Prune(now, TimeSpan.FromMinutes(10));
         }
 
-        // With byte usage available, "top" means data consumed this session (stable order,
-        // no row dancing every second). Without it, the best honest signal is socket count.
+        BuildConnectionGroups(connections);
+        BuildAppGroups(aggregated, showMeters);
+    }
+
+    private void BuildAppGroups(IReadOnlyList<AppUsage> aggregated, bool showMeters)
+    {
+        var summaries = aggregated
+            .GroupBy(AppKey, StringComparer.OrdinalIgnoreCase)
+            .Select(group =>
+            {
+                var apps = group.ToList();
+                var (totalDown, totalUp) = GroupTotals(apps);
+
+                return new AppSummary(
+                    group.Key,
+                    MostCommonName(apps),
+                    apps.Select(a => a.ExecutablePath).FirstOrDefault(p => !string.IsNullOrEmpty(p)),
+                    apps,
+                    apps.Sum(a => a.BytesReceived) / _intervalSeconds,
+                    apps.Sum(a => a.BytesSent) / _intervalSeconds,
+                    totalDown,
+                    totalUp,
+                    apps.Sum(a => a.ConnectionCount),
+                    apps.Sum(a => a.ActiveConnectionCount),
+                    apps.Sum(a => a.RemoteHostCount));
+            })
+            .ToList();
+
+        var maxDownload = summaries.Count == 0 ? 0 : summaries.Max(s => s.Download);
+        var maxUpload = summaries.Count == 0 ? 0 : summaries.Max(s => s.Upload);
+
         var ordered = showMeters
-            ? aggregated
-                .OrderByDescending(SessionBytes)
-                .ThenByDescending(a => a.BytesReceived + a.BytesSent)
-            : aggregated
-                .OrderByDescending(a => a.ActiveConnectionCount)
-                .ThenByDescending(a => a.ConnectionCount);
+            ? summaries
+                .OrderByDescending(s => s.TotalDown + s.TotalUp)
+                .ThenByDescending(s => s.Download + s.Upload)
+            : summaries
+                .OrderByDescending(s => s.Active)
+                .ThenByDescending(s => s.Sockets);
 
-        var usage = ordered
-            .ThenBy(a => a.ProcessName, StringComparer.OrdinalIgnoreCase)
-            .ToList();
-
-        var rates = usage
-            .Select(a => (Download: a.BytesReceived / _intervalSeconds, Upload: a.BytesSent / _intervalSeconds))
-            .ToList();
-
-        var maxDownload = rates.Count == 0 ? 0 : rates.Max(r => r.Download);
-        var maxUpload = rates.Count == 0 ? 0 : rates.Max(r => r.Upload);
-
-        var apps = new List<AppRow>(usage.Count);
-        for (var i = 0; i < usage.Count; i++)
-        {
-            var (totalDownload, totalUpload) = _usageTotals.Get(usage[i].ProcessId, usage[i].ProcessName);
-
-            apps.Add(ToAppRow(
-                usage[i],
-                rates[i].Download,
-                rates[i].Upload,
-                totalDownload,
-                totalUpload,
+        var apps = ordered
+            .ThenBy(s => s.Name, StringComparer.OrdinalIgnoreCase)
+            .Select(s => ToAppRow(
+                s,
                 maxDownload,
                 maxUpload,
-                showMeters));
-        }
+                showMeters,
+                _expanded.Contains("app|" + s.Key)))
+            .ToList();
 
-        RowSync.Apply(Apps, apps, r => r.ProcessId.ToString(CultureInfo.InvariantCulture));
+        RowSync.Apply(Apps, apps, r => r.GroupKey);
         AppCount = apps.Count;
     }
+
+    private void BuildConnectionGroups(IReadOnlyList<ConnectionInfo> connections)
+    {
+        var groups = connections
+            .Where(c => c.RemotePort != 0 || c.IsListening)
+            .GroupBy(AppKey, StringComparer.OrdinalIgnoreCase)
+            .Select(group => new { Key = group.Key, Items = group.ToList() })
+            .OrderByDescending(g => g.Items.Count)
+            .ThenBy(g => g.Items[0].ProcessName, StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        var rows = new List<ConnectionGroupRow>(groups.Count);
+
+        foreach (var group in groups)
+        {
+            var first = group.Items[0];
+            var established = group.Items.Count(c => c.State is "Established" or "Open");
+
+            rows.Add(new ConnectionGroupRow(
+                group.Key,
+                first.ProcessName,
+                InitialOf(first.ProcessName),
+                AccentPalette.For(first.ProcessName),
+                AppIcons.ForProcess(first.ExecutablePath, first.ProcessName),
+                $"{group.Items.Count} {(group.Items.Count == 1 ? "connection" : "connections")} \u00B7 {established} active",
+                _expanded.Contains("conn|" + group.Key),
+                group.Items.Take(MaxConnectionRows).Select(ToRow).ToList(),
+                first.ExecutablePath ?? $"PID {first.ProcessId}"));
+        }
+
+        RowSync.Apply(Connections, rows, r => r.GroupKey);
+    }
+
+    private (long Down, long Up) GroupTotals(IReadOnlyList<AppUsage> apps)
+    {
+        long down = 0;
+        long up = 0;
+
+        foreach (var app in apps)
+        {
+            var (d, u) = _usageTotals.Get(app.ProcessId, app.ProcessName);
+            down += d;
+            up += u;
+        }
+
+        return (down, up);
+    }
+
+    private static string AppKey(AppUsage app) =>
+        string.IsNullOrEmpty(app.ExecutablePath)
+            ? "name:" + app.ProcessName.ToLowerInvariant()
+            : "path:" + app.ExecutablePath.ToLowerInvariant();
+
+    private static string AppKey(ConnectionInfo connection) =>
+        string.IsNullOrEmpty(connection.ExecutablePath)
+            ? "name:" + connection.ProcessName.ToLowerInvariant()
+            : "path:" + connection.ExecutablePath.ToLowerInvariant();
+
+    private static string MostCommonName(IReadOnlyList<AppUsage> apps) =>
+        apps.GroupBy(a => a.ProcessName)
+            .OrderByDescending(g => g.Count())
+            .Select(g => g.Key)
+            .FirstOrDefault() ?? "Unknown";
+
+    private static string InitialOf(string name) =>
+        string.IsNullOrWhiteSpace(name) ? "?" : char.ToUpperInvariant(name[0]).ToString();
 
     private ConnectionRow ToRow(ConnectionInfo connection) =>
         new(
@@ -348,57 +419,84 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         executablePath ?? $"PID {processId}";
 
     private AppRow ToAppRow(
-        AppUsage app,
-        double downloadRate,
-        double uploadRate,
-        long totalDownload,
-        long totalUpload,
+        AppSummary summary,
         double maxDownload,
         double maxUpload,
-        bool showMeters)
+        bool showMeters,
+        bool expanded)
     {
-        var active = app.ActiveConnectionCount;
-        var socketWord = app.ConnectionCount == 1 ? "socket" : "sockets";
-        var hostWord = app.RemoteHostCount == 1 ? "host" : "hosts";
-
-        var detail = active > 0
-            ? $"{active} active · {app.RemoteHostCount} {hostWord} · {app.ConnectionCount} {socketWord}"
-            : app.ConnectionCount > 0
-                ? "No active outbound sockets"
-                : "Traffic only · sockets closed";
-
-        var downloadIdle = showMeters && downloadRate < 1;
-        var uploadIdle = showMeters && uploadRate < 1;
+        var downloadIdle = showMeters && summary.Download < 1;
+        var uploadIdle = showMeters && summary.Upload < 1;
 
         var downloadText = !showMeters
-            ? "—"
-            : downloadIdle ? "0" : ByteFormatter.FormatRate(downloadRate);
+            ? "\u2014"
+            : downloadIdle ? "0" : ByteFormatter.FormatRate(summary.Download);
 
         var uploadText = !showMeters
-            ? "—"
-            : uploadIdle ? "0" : ByteFormatter.FormatRate(uploadRate);
+            ? "\u2014"
+            : uploadIdle ? "0" : ByteFormatter.FormatRate(summary.Upload);
+
+        var socketWord = summary.Sockets == 1 ? "socket" : "sockets";
+        var hostWord = summary.Hosts == 1 ? "host" : "hosts";
+
+        var detail = summary.Active > 0
+            ? $"{summary.Active} active \u00B7 {summary.Hosts} {hostWord} \u00B7 {summary.Sockets} {socketWord}"
+            : summary.Sockets > 0
+                ? "No active outbound sockets"
+                : "Traffic only \u00B7 sockets closed";
+
+        var processes = summary.Apps
+            .OrderByDescending(a => a.BytesReceived + a.BytesSent)
+            .Select(a =>
+            {
+                var (d, u) = _usageTotals.Get(a.ProcessId, a.ProcessName);
+                return new AppProcessRow(
+                    a.ProcessId,
+                    a.ProcessName,
+                    $"PID {a.ProcessId}",
+                    $"{a.ConnectionCount} {(a.ConnectionCount == 1 ? "socket" : "sockets")} \u00B7 {a.ActiveConnectionCount} active",
+                    showMeters ? ByteFormatter.FormatRate(a.BytesReceived / _intervalSeconds) : "\u2014",
+                    showMeters ? ByteFormatter.FormatRate(a.BytesSent / _intervalSeconds) : "\u2014",
+                    showMeters ? ByteFormatter.FormatBytes(d + u) : "\u2014");
+            })
+            .ToList();
 
         return new AppRow(
-            app.ProcessId,
-            app.ProcessName,
-            app.Initial,
-            AccentPalette.For(app.ProcessName),
-            AppIcons.ForProcess(app.ExecutablePath, app.ProcessName),
+            summary.Key,
+            summary.Name,
+            InitialOf(summary.Name),
+            AccentPalette.For(summary.Name),
+            AppIcons.ForProcess(summary.Path, summary.Name),
             detail,
             downloadText,
             uploadText,
-            showMeters ? ByteFormatter.FormatBytes(totalDownload) : "—",
-            showMeters ? ByteFormatter.FormatBytes(totalUpload) : "—",
-            MeterMath.Scale(downloadRate, maxDownload),
-            MeterMath.Scale(uploadRate, maxUpload),
+            showMeters ? ByteFormatter.FormatBytes(summary.TotalDown) : "\u2014",
+            showMeters ? ByteFormatter.FormatBytes(summary.TotalUp) : "\u2014",
+            MeterMath.Scale(summary.Download, maxDownload),
+            MeterMath.Scale(summary.Upload, maxUpload),
             downloadIdle,
             uploadIdle,
             showMeters,
-            app.ExecutablePath,
-            _firewall.IsBlocked(app.ExecutablePath, FirewallDirection.In),
-            _firewall.IsBlocked(app.ExecutablePath, FirewallDirection.Out),
-            TooltipFor(app.ExecutablePath, app.ProcessId));
+            summary.Path,
+            _firewall.IsBlocked(summary.Path, FirewallDirection.In),
+            _firewall.IsBlocked(summary.Path, FirewallDirection.Out),
+            expanded,
+            processes,
+            summary.Path ?? $"PID {summary.Apps[0].ProcessId}");
     }
+
+    private sealed record AppSummary(
+        string Key,
+        string Name,
+        string? Path,
+        IReadOnlyList<AppUsage> Apps,
+        double Download,
+        double Upload,
+        long TotalDown,
+        long TotalUp,
+        int Sockets,
+        int Active,
+        int Hosts);
 
     private static int StatePriority(string state) => state switch
     {
@@ -425,6 +523,24 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         if (IsCapturing)
             _ = TickAsync();
+    }
+
+    private void ToggleExpand(object? parameter)
+    {
+        var key = parameter switch
+        {
+            AppRow app => "app|" + app.GroupKey,
+            ConnectionGroupRow connection => "conn|" + connection.GroupKey,
+            _ => null
+        };
+
+        if (key is null)
+            return;
+
+        if (!_expanded.Add(key))
+            _expanded.Remove(key);
+
+        _ = TickAsync();
     }
 
     private void ToggleDirection(object? parameter, FirewallDirection direction)
@@ -548,12 +664,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         {
             // UAC was dismissed or there is no interactive shell: stay running unelevated.
         }
-    }
-
-    private long SessionBytes(AppUsage app)
-    {
-        var (download, upload) = _usageTotals.Get(app.ProcessId, app.ProcessName);
-        return download + upload;
     }
 
     private void ResetSession()

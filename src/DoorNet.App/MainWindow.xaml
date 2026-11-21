@@ -344,16 +344,17 @@
                                 BorderThickness="0,0,0,1">
                             <Grid>
                                 <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="20" />
                                     <ColumnDefinition Width="38" />
                                     <ColumnDefinition Width="*" />
                                     <ColumnDefinition Width="86" />
                                     <ColumnDefinition Width="86" />
                                     <ColumnDefinition Width="186" />
                                 </Grid.ColumnDefinitions>
-                                <TextBlock Grid.Column="0" Grid.ColumnSpan="2" Text="APPLICATION" Style="{StaticResource TableHeader}" />
-                                <TextBlock Grid.Column="2" Text="DOWNLOAD" Style="{StaticResource TableHeader}" TextAlignment="Center" ToolTip="Download direction (inbound). Click the pill to block or allow it." />
-                                <TextBlock Grid.Column="3" Text="UPLOAD" Style="{StaticResource TableHeader}" TextAlignment="Center" ToolTip="Upload direction (outbound). Click the pill to block or allow it." />
-                                <Grid Grid.Column="4">
+                                <TextBlock Grid.Column="0" Grid.ColumnSpan="3" Text="APPLICATION" Style="{StaticResource TableHeader}" />
+                                <TextBlock Grid.Column="3" Text="DOWNLOAD" Style="{StaticResource TableHeader}" TextAlignment="Center" ToolTip="Download direction (inbound). Click the pill to block or allow it." />
+                                <TextBlock Grid.Column="4" Text="UPLOAD" Style="{StaticResource TableHeader}" TextAlignment="Center" ToolTip="Upload direction (outbound). Click the pill to block or allow it." />
+                                <Grid Grid.Column="5">
                                     <Grid.ColumnDefinitions>
                                         <ColumnDefinition Width="64" />
                                         <ColumnDefinition Width="60" />
@@ -374,8 +375,10 @@
                                                     BorderBrush="{DynamicResource LineSoftBrush}"
                                                     BorderThickness="0,0,0,1"
                                                     ToolTip="{Binding Tooltip}">
+                                                <StackPanel>
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="20" />
                                                         <ColumnDefinition Width="38" />
                                                         <ColumnDefinition Width="*" />
                                                         <ColumnDefinition Width="86" />
@@ -383,7 +386,24 @@
                                                         <ColumnDefinition Width="186" />
                                                     </Grid.ColumnDefinitions>
 
-                                                    <Border Grid.Column="0" Width="30" Height="30" CornerRadius="8">
+                                                    <Button Grid.Column="0"
+                                                            Command="{Binding DataContext.ToggleExpandCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}"
+                                                            VerticalAlignment="Center"
+                                                            ToolTip="Show or hide this application's processes">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button" BasedOn="{StaticResource ExpandButton}">
+                                                                <Setter Property="Content" Value="&#xE76C;" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsExpanded}" Value="True">
+                                                                        <Setter Property="Content" Value="&#xE70D;" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
+
+                                                    <Border Grid.Column="1" Width="30" Height="30" CornerRadius="8">
                                                         <Border.Style>
                                                             <Style TargetType="Border">
                                                                 <Setter Property="Background" Value="{DynamicResource BadgeBrush}" />
@@ -426,7 +446,7 @@
                                                         </Grid>
                                                     </Border>
 
-                                                    <StackPanel Grid.Column="1" Margin="0,0,8,0" VerticalAlignment="Center">
+                                                    <StackPanel Grid.Column="2" Margin="0,0,8,0" VerticalAlignment="Center">
                                                         <TextBlock Text="{Binding Name}"
                                                                    FontSize="12.5"
                                                                    Foreground="{DynamicResource TextPrimaryBrush}"
@@ -437,7 +457,7 @@
                                                                    TextTrimming="CharacterEllipsis" />
                                                     </StackPanel>
 
-                                                    <Button Grid.Column="2"
+                                                    <Button Grid.Column="3"
                                                             VerticalAlignment="Center"
                                                             HorizontalAlignment="Center"
                                                             Command="{Binding DataContext.ToggleInboundCommand, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -477,7 +497,7 @@
                                                         </StackPanel>
                                                     </Button>
 
-                                                    <Button Grid.Column="3"
+                                                    <Button Grid.Column="4"
                                                             VerticalAlignment="Center"
                                                             HorizontalAlignment="Center"
                                                             Command="{Binding DataContext.ToggleOutboundCommand, RelativeSource={RelativeSource AncestorType=Window}}"
@@ -517,7 +537,7 @@
                                                         </StackPanel>
                                                     </Button>
 
-                                                    <StackPanel Grid.Column="4" VerticalAlignment="Center" HorizontalAlignment="Right">
+                                                    <StackPanel Grid.Column="5" VerticalAlignment="Center" HorizontalAlignment="Right">
                                                         <StackPanel>
                                                             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
                                                                 <TextBlock Text="&#x2193;" FontSize="11" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,4,0" />
@@ -575,6 +595,33 @@
                                                         </StackPanel>
                                                     </StackPanel>
                                                 </Grid>
+
+                                                <ItemsControl ItemsSource="{Binding Processes}"
+                                                              Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVis}}"
+                                                              Margin="58,4,0,2">
+                                                    <ItemsControl.ItemTemplate>
+                                                        <DataTemplate>
+                                                            <Grid Margin="0,2">
+                                                                <Grid.ColumnDefinitions>
+                                                                    <ColumnDefinition Width="*" />
+                                                                    <ColumnDefinition Width="86" />
+                                                                    <ColumnDefinition Width="86" />
+                                                                    <ColumnDefinition Width="186" />
+                                                                </Grid.ColumnDefinitions>
+
+                                                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                                                    <TextBlock Text="{Binding Name}" FontSize="11" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" />
+                                                                    <TextBlock Text="{Binding PidText}" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" Margin="8,0,0,0" VerticalAlignment="Center" />
+                                                                </StackPanel>
+
+                                                                <TextBlock Grid.Column="1" Text="{Binding DownloadText}" FontSize="10" TextAlignment="Right" Foreground="{DynamicResource DownloadBrush}" VerticalAlignment="Center" />
+                                                                <TextBlock Grid.Column="2" Text="{Binding UploadText}" FontSize="10" TextAlignment="Right" Foreground="{DynamicResource UploadBrush}" VerticalAlignment="Center" />
+                                                                <TextBlock Grid.Column="3" Text="{Binding TotalText}" FontSize="10" TextAlignment="Right" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" />
+                                                            </Grid>
+                                                        </DataTemplate>
+                                                    </ItemsControl.ItemTemplate>
+                                                </ItemsControl>
+                                                </StackPanel>
                                             </Border>
                                         </DataTemplate>
                                     </ItemsControl.ItemTemplate>
@@ -621,58 +668,78 @@
                             </TextBlock>
                         </Grid>
 
-                        <DataGrid Grid.Row="1"
-                                  ItemsSource="{Binding Connections}"
-                                  Margin="0,8,0,0"
-                                  HeadersVisibility="Column"
-                                  BorderThickness="0">
-                            <DataGrid.Columns>
-                                <DataGridTemplateColumn Header="APPLICATION" Width="1.7*">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal">
-                                                <Image Source="{Binding Icon}"
-                                                       Width="16"
-                                                       Height="16"
-                                                       Margin="0,0,7,0"
-                                                       VerticalAlignment="Center"
-                                                       RenderOptions.BitmapScalingMode="HighQuality" />
-                                                <TextBlock Text="{Binding ProcessName}"
-                                                           Style="{StaticResource CellTextStrong}" />
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                                <DataGridTextColumn Header="PROTO"
-                                                    Binding="{Binding Protocol}"
-                                                    Width="52"
-                                                    ElementStyle="{StaticResource CellText}" />
-                                <DataGridTextColumn Header="LOCAL"
-                                                    Binding="{Binding Local}"
-                                                    Width="1.3*"
-                                                    ElementStyle="{StaticResource CellText}" />
-                                <DataGridTextColumn Header="REMOTE"
-                                                    Binding="{Binding Remote}"
-                                                    Width="1.4*"
-                                                    ElementStyle="{StaticResource CellText}" />
-                                <DataGridTemplateColumn Header="STATE" Width="98">
-                                    <DataGridTemplateColumn.CellTemplate>
-                                        <DataTemplate>
-                                            <StackPanel Orientation="Horizontal">
-                                                <Ellipse Width="6" Height="6"
-                                                         Fill="{Binding StateBrush}"
-                                                         Margin="0,0,6,0"
-                                                         VerticalAlignment="Center" />
-                                                <TextBlock Text="{Binding State}"
-                                                           FontSize="11.5"
-                                                           Foreground="{DynamicResource TextSecondaryBrush}"
-                                                           VerticalAlignment="Center" />
-                                            </StackPanel>
-                                        </DataTemplate>
-                                    </DataGridTemplateColumn.CellTemplate>
-                                </DataGridTemplateColumn>
-                            </DataGrid.Columns>
-                        </DataGrid>
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,6,0,0">
+                            <ItemsControl ItemsSource="{Binding Connections}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <StackPanel>
+                                            <Border Padding="0,7"
+                                                    BorderBrush="{DynamicResource LineSoftBrush}"
+                                                    BorderThickness="0,0,0,1"
+                                                    ToolTip="{Binding Tooltip}">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="20" />
+                                                        <ColumnDefinition Width="30" />
+                                                        <ColumnDefinition Width="*" />
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <Button Grid.Column="0"
+                                                            Command="{Binding DataContext.ToggleExpandCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}"
+                                                            VerticalAlignment="Center"
+                                                            ToolTip="Show or hide this application's connections">
+                                                        <Button.Style>
+                                                            <Style TargetType="Button" BasedOn="{StaticResource ExpandButton}">
+                                                                <Setter Property="Content" Value="&#xE76C;" />
+                                                                <Style.Triggers>
+                                                                    <DataTrigger Binding="{Binding IsExpanded}" Value="True">
+                                                                        <Setter Property="Content" Value="&#xE70D;" />
+                                                                    </DataTrigger>
+                                                                </Style.Triggers>
+                                                            </Style>
+                                                        </Button.Style>
+                                                    </Button>
+
+                                                    <Image Grid.Column="1" Source="{Binding Icon}" Width="20" Height="20" VerticalAlignment="Center" RenderOptions.BitmapScalingMode="HighQuality" />
+
+                                                    <StackPanel Grid.Column="2" Margin="8,0,0,0" VerticalAlignment="Center">
+                                                        <TextBlock Text="{Binding Name}" FontSize="12.5" Foreground="{DynamicResource TextPrimaryBrush}" TextTrimming="CharacterEllipsis" />
+                                                        <TextBlock Text="{Binding Summary}" Style="{StaticResource Caption}" Margin="0,2,0,0" />
+                                                    </StackPanel>
+                                                </Grid>
+                                            </Border>
+
+                                            <ItemsControl ItemsSource="{Binding Connections}"
+                                                          Visibility="{Binding IsExpanded, Converter={StaticResource BoolToVis}}"
+                                                          Margin="50,2,0,4">
+                                                <ItemsControl.ItemTemplate>
+                                                    <DataTemplate>
+                                                        <Grid Margin="0,2">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+                                                            <TextBlock TextTrimming="CharacterEllipsis" FontSize="10.5">
+                                                                <Run Text="{Binding Protocol}" Foreground="{DynamicResource TextMutedBrush}" />
+                                                                <Run Text="  " />
+                                                                <Run Text="{Binding Local}" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                                                <Run Text="  -&gt;  " Foreground="{DynamicResource TextMutedBrush}" />
+                                                                <Run Text="{Binding Remote}" Foreground="{DynamicResource TextSecondaryBrush}" />
+                                                            </TextBlock>
+                                                            <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="10,0,0,0">
+                                                                <Ellipse Width="5" Height="5" Fill="{Binding StateBrush}" VerticalAlignment="Center" Margin="0,0,5,0" />
+                                                                <TextBlock Text="{Binding State}" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" />
+                                                            </StackPanel>
+                                                        </Grid>
+                                                    </DataTemplate>
+                                                </ItemsControl.ItemTemplate>
+                                            </ItemsControl>
+                                        </StackPanel>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
                     </Grid>
                 </Border>
             </Grid>

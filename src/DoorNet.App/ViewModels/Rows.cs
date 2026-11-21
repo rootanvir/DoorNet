@@ -28,9 +28,9 @@ public sealed record ConnectionRow(
     }
 }
 
-/// <summary>A flat row for the per-application list.</summary>
+/// <summary>A flat row for the per-application list, aggregated across processes.</summary>
 public sealed record AppRow(
-    int ProcessId,
+    string GroupKey,
     string Name,
     string Initial,
     Brush Accent,
@@ -48,6 +48,8 @@ public sealed record AppRow(
     string? ExecutablePath,
     bool InBlocked,
     bool OutBlocked,
+    bool IsExpanded,
+    IReadOnlyList<AppProcessRow> Processes,
     string Tooltip)
 {
     /// <summary>False for protected processes the shell cannot give us an image for.</summary>
@@ -56,6 +58,33 @@ public sealed record AppRow(
     public string InStateText => InBlocked ? "Blocked" : "Allowed";
 
     public string OutStateText => OutBlocked ? "Blocked" : "Allowed";
+}
+
+/// <summary>One process behind an aggregated application row.</summary>
+public sealed record AppProcessRow(
+    int ProcessId,
+    string Name,
+    string PidText,
+    string DetailText,
+    string DownloadText,
+    string UploadText,
+    string TotalText);
+
+/// <summary>Connections for one application, collapsible in the Live connections list.</summary>
+public sealed record ConnectionGroupRow(
+    string GroupKey,
+    string Name,
+    string Initial,
+    Brush Accent,
+    ImageSource? Icon,
+    string Summary,
+    bool IsExpanded,
+    IReadOnlyList<ConnectionRow> Connections,
+    string Tooltip)
+{
+    public bool HasIcon => Icon is not null;
+
+    public bool HasConnections => Connections.Count > 0;
 }
 
 /// <summary>Deterministic accent colours so an app keeps the same badge across runs.</summary>
