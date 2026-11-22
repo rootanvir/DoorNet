@@ -359,7 +359,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
                 InitialOf(first.ProcessName),
                 AccentPalette.For(first.ProcessName),
                 AppIcons.ForProcess(first.ExecutablePath, first.ProcessName),
-                $"{group.Items.Count} {(group.Items.Count == 1 ? "connection" : "connections")} \u00B7 {established} active",
+                $"{group.Items.Count} {(group.Items.Count == 1 ? "conn" : "conns")} \u00B7 {established} active",
                 _expanded.Contains("conn|" + group.Key),
                 group.Items.Take(MaxConnectionRows).Select(ToRow).ToList(),
                 first.ExecutablePath ?? $"PID {first.ProcessId}"));
