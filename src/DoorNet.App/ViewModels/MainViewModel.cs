@@ -32,6 +32,12 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly RingBuffer<ThroughputPoint> _history = new(HistoryCapacity);
     private readonly UsageTotals _usageTotals = new();
     private readonly HashSet<string> _expanded = new(StringComparer.Ordinal);
+    private readonly GeoLocator _geo = new();
+    private readonly Dictionary<string, GeoPoint> _remoteGeo = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _geoPending = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _geoFailed = new(StringComparer.OrdinalIgnoreCase);
+    private GeoPoint? _selfGeo;
+    private IReadOnlyList<GeoMarker> _mapMarkers = Array.Empty<GeoMarker>();
     private readonly DispatcherTimer _timer;
 
     private bool _tickRunning;
@@ -109,6 +115,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         _timer.Start();
         _ = TickAsync();
+        _ = LocateSelfAsync();
     }
 
     public ObservableCollection<ConnectionGroupRow> Connections { get; } = [];
@@ -169,6 +176,14 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         get => _chartPoints;
         private set => SetProperty(ref _chartPoints, value);
     }
+
+    public IReadOnlyList<GeoMarker> MapMarkers
+    {
+        get => _mapMarkers;
+        private set => SetProperty(ref _mapMarkers, value);
+    }
+
+    public string RemoteHostCountText => $"{_remoteGeo.Count} located";
 
     public bool IsCapturing
     {
@@ -285,6 +300,95 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         BuildConnectionGroups(connections);
         BuildAppGroups(aggregated, showMeters);
+        QueueGeolocation(connections);
+    }
+
+    private void QueueGeolocation(IReadOnlyList<ConnectionInfo> connections)
+    {
+        if (_geoPending.Count >= 3)
+            return;
+
+        foreach (var connection in connections)
+        {
+            if (connection.RemotePort == 0)
+                continue;
+
+            var address = connection.RemoteAddress;
+            if (string.IsNullOrEmpty(address)
+                || _remoteGeo.ContainsKey(address)
+                || _geoPending.Contains(address)
+                || _geoFailed.Contains(address)
+                || !GeoLocator.IsPublicAddress(address))
+            {
+                continue;
+            }
+
+            _geoPending.Add(address);
+            _ = LocateRemoteAsync(address);
+
+            if (_geoPending.Count >= 3)
+                break;
+        }
+    }
+
+    private async Task LocateRemoteAsync(string address)
+    {
+        try
+        {
+            var point = await _geo.LocateAsync(address).ConfigureAwait(false);
+
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                if (point is { } geo)
+                    _remoteGeo[address] = geo;
+                else
+                    _geoFailed.Add(address);
+
+                RebuildMarkers();
+            });
+        }
+        catch (Exception)
+        {
+            _geoFailed.Add(address);
+        }
+        finally
+        {
+            _geoPending.Remove(address);
+        }
+    }
+
+    private async Task LocateSelfAsync()
+    {
+        try
+        {
+            var point = await _geo.LocateSelfAsync().ConfigureAwait(false);
+            if (point is not { } geo)
+                return;
+
+            await Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                _selfGeo = geo;
+                RebuildMarkers();
+            });
+        }
+        catch (Exception)
+        {
+            // Geolocation is best-effort; the map simply shows no "mine" dot.
+        }
+    }
+
+    private void RebuildMarkers()
+    {
+        var markers = new List<GeoMarker>(_remoteGeo.Count + 1);
+
+        if (_selfGeo is { } self)
+            markers.Add(new GeoMarker(self.Latitude, self.Longitude, IsLocal: true, "Mine"));
+
+        foreach (var (address, point) in _remoteGeo.Take(300))
+            markers.Add(new GeoMarker(point.Latitude, point.Longitude, IsLocal: false, address));
+
+        MapMarkers = markers;
+        OnPropertyChanged(nameof(RemoteHostCountText));
     }
 
     private void BuildAppGroups(IReadOnlyList<AppUsage> aggregated, bool showMeters)
@@ -712,5 +816,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _disposed = true;
         _timer.Stop();
         (_perAppSource as IDisposable)?.Dispose();
+        _geo.Dispose();
     }
 }

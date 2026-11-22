@@ -161,58 +161,19 @@
         <Grid Grid.Row="1" Margin="20,16,20,14">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
-                <RowDefinition Height="*" MinHeight="250" />
+                <RowDefinition Height="2.2*" MinHeight="200" />
+                <RowDefinition Height="3*" MinHeight="250" />
             </Grid.RowDefinitions>
 
-            <!-- Throughput + stat rail -->
+            <!-- Stat cards -->
             <Grid Grid.Row="0">
                 <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="2.4*" />
-                    <ColumnDefinition Width="1*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
+                    <ColumnDefinition Width="*" />
                 </Grid.ColumnDefinitions>
 
-                <Border Style="{StaticResource Card}" Margin="0,0,7,0" Padding="16,13,16,10">
-                    <Grid>
-                        <Grid.RowDefinitions>
-                            <RowDefinition Height="Auto" />
-                            <RowDefinition Height="*" />
-                        </Grid.RowDefinitions>
-    
-                        <Grid>
-                            <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                                <TextBlock Text="Throughput" Style="{StaticResource SectionTitle}" />
-                                <Border Background="{DynamicResource SubtlePillBrush}" CornerRadius="5" Padding="6,2" Margin="9,0,0,0" VerticalAlignment="Center">
-                                    <TextBlock Text="90 s window" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" />
-                                </Border>
-                            </StackPanel>
-    
-                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
-                                <Ellipse Width="7" Height="7" Fill="{DynamicResource DownloadBrush}" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                <TextBlock Text="Download" Style="{StaticResource Caption}" Margin="0,0,16,0" />
-                                <Ellipse Width="7" Height="7" Fill="{DynamicResource UploadBrush}" Margin="0,0,6,0" VerticalAlignment="Center" />
-                                <TextBlock Text="Upload" Style="{StaticResource Caption}" />
-                            </StackPanel>
-                        </Grid>
-    
-                        <controls:ThroughputChart Grid.Row="1"
-                                                  Points="{Binding ChartPoints}"
-                                                  DownloadBrush="{DynamicResource DownloadBrush}"
-                                                  UploadBrush="{DynamicResource UploadBrush}"
-                                                  GridBrush="{DynamicResource ChartGridBrush}"
-                                                  LabelBrush="{DynamicResource ChartLabelBrush}"
-                                                  Margin="0,10,0,0"
-                                                  MinHeight="130" />
-                    </Grid>
-                </Border>
-
-                <Grid Grid.Column="1" Margin="7,0,0,0">
-                    <Grid.RowDefinitions>
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="*" />
-                        <RowDefinition Height="*" />
-                    </Grid.RowDefinitions>
-
-                    <Border Grid.Row="0" Style="{StaticResource Card}">
+                <Border Grid.Column="0" Style="{StaticResource Card}" Margin="0,0,7,0">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -244,8 +205,8 @@
                             <TextBlock Grid.Row="2" Text="{Binding DownPeakText}" Style="{StaticResource Caption}" Margin="0,4,0,0" />
                         </Grid>
                     </Border>
-    
-                    <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,14,0,0">
+
+                <Border Grid.Column="1" Style="{StaticResource Card}" Margin="7,0,7,0">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -277,8 +238,8 @@
                             <TextBlock Grid.Row="2" Text="{Binding UpPeakText}" Style="{StaticResource Caption}" Margin="0,4,0,0" />
                         </Grid>
                     </Border>
-    
-                    <Border Grid.Row="2" Style="{StaticResource Card}" Margin="0,14,0,0">
+
+                <Border Grid.Column="2" Style="{StaticResource Card}" Margin="7,0,0,0">
                         <Grid>
                             <Grid.RowDefinitions>
                                 <RowDefinition Height="Auto" />
@@ -299,12 +260,85 @@
                             <TextBlock Grid.Row="2" Text="{Binding SessionSplitText}" Style="{StaticResource Caption}" Margin="0,4,0,0" />
                         </Grid>
                     </Border>
-                </Grid>
+            </Grid>
+
+            <!-- Throughput + world map -->
+            <Grid Grid.Row="1" Margin="0,14,0,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.7*" />
+                    <ColumnDefinition Width="1*" />
+                </Grid.ColumnDefinitions>
+
+                    <Border Style="{StaticResource Card}" Margin="0,0,7,0" Padding="16,13,16,10">
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
+                                <RowDefinition Height="*" />
+                            </Grid.RowDefinitions>
+        
+                            <Grid>
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <TextBlock Text="Throughput" Style="{StaticResource SectionTitle}" />
+                                    <Border Background="{DynamicResource SubtlePillBrush}" CornerRadius="5" Padding="6,2" Margin="9,0,0,0" VerticalAlignment="Center">
+                                        <TextBlock Text="90 s window" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" />
+                                    </Border>
+                                </StackPanel>
+        
+                                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                    <Ellipse Width="7" Height="7" Fill="{DynamicResource DownloadBrush}" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                    <TextBlock Text="Download" Style="{StaticResource Caption}" Margin="0,0,16,0" />
+                                    <Ellipse Width="7" Height="7" Fill="{DynamicResource UploadBrush}" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                    <TextBlock Text="Upload" Style="{StaticResource Caption}" />
+                                </StackPanel>
+                            </Grid>
+        
+                            <controls:ThroughputChart Grid.Row="1"
+                                                      Points="{Binding ChartPoints}"
+                                                      DownloadBrush="{DynamicResource DownloadBrush}"
+                                                      UploadBrush="{DynamicResource UploadBrush}"
+                                                      GridBrush="{DynamicResource ChartGridBrush}"
+                                                      LabelBrush="{DynamicResource ChartLabelBrush}"
+                                                      Margin="0,10,0,0"
+                                                      MinHeight="130" />
+                        </Grid>
+                    </Border>
+
+                <Border Grid.Column="1" Style="{StaticResource Card}" Margin="7,0,0,0" Padding="16,13,14,12">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <Grid Margin="0,0,2,0">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="Remote servers" Style="{StaticResource SectionTitle}" />
+                                <Border Background="{DynamicResource SubtlePillBrush}" CornerRadius="5" Padding="6,2" Margin="9,0,0,0" VerticalAlignment="Center">
+                                    <TextBlock Text="{Binding RemoteHostCountText}" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" />
+                                </Border>
+                            </StackPanel>
+                            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center">
+                                <Ellipse Width="7" Height="7" Fill="{DynamicResource DownloadBrush}" Margin="0,0,6,0" />
+                                <TextBlock Text="Mine" Style="{StaticResource Caption}" Margin="0,0,14,0" />
+                                <Ellipse Width="7" Height="7" Fill="{DynamicResource DangerBrush}" Margin="0,0,6,0" />
+                                <TextBlock Text="Remote" Style="{StaticResource Caption}" />
+                            </StackPanel>
+                        </Grid>
+
+                        <controls:WorldMapView Grid.Row="1"
+                                               Markers="{Binding MapMarkers}"
+                                               Margin="0,8,0,0"
+                                               LandBrush="{DynamicResource MapLandBrush}"
+                                               LocalBrush="{DynamicResource DownloadBrush}"
+                                               RemoteBrush="{DynamicResource DangerBrush}" />
+                    </Grid>
+                </Border>
             </Grid>
 
 
+
             <!-- Tables -->
-            <Grid Grid.Row="1" Margin="0,14,0,0">
+            <Grid Grid.Row="2" Margin="0,14,0,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="1.25*" />
                     <ColumnDefinition Width="1.05*" />

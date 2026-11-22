@@ -5,6 +5,12 @@
     <ProjectReference Include="..\DoorNet.Capture\DoorNet.Capture.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Content Include="Assets\world-land.geojson">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net10.0-windows</TargetFramework>
