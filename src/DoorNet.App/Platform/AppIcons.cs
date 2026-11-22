@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using System.Globalization;
 using System.IO;
 using System.Runtime.InteropServices;
 using System.Windows;
@@ -11,6 +12,8 @@ namespace DoorNet.App.Platform;
 /// <summary>
 /// Shell icons for application executables. Extracted once per path and cached, because the
 /// dashboard rebuilds its rows every second and shell lookups are comparatively expensive.
+/// Every process gets an icon: protected processes fall back to their System32 binary, and
+/// anything unresolvable gets a drawn placeholder so no row is ever iconless.
 /// </summary>
 public static class AppIcons
 {
@@ -23,20 +26,28 @@ public static class AppIcons
     private static readonly ConcurrentDictionary<string, ImageSource?> SystemCache =
         new(StringComparer.OrdinalIgnoreCase);
 
+    private static readonly ConcurrentDictionary<string, ImageSource> PlaceholderCache =
+        new(StringComparer.Ordinal);
+
     /// <summary>
     /// Icon for a process. Falls back to the matching binary in System32/SysWOW64 when the
-    /// process is protected and its image path cannot be read (svchost, lsass, services…).
+    /// process is protected and its image path cannot be read (svchost, lsass, services…),
+    /// then to a placeholder glyph.
     /// </summary>
-    public static ImageSource? ForProcess(string? executablePath, string? processName)
+    public static ImageSource ForProcess(string? executablePath, string? processName)
     {
         var icon = ForExecutable(executablePath);
         if (icon is not null)
             return icon;
 
-        if (string.IsNullOrWhiteSpace(processName))
-            return null;
+        if (!string.IsNullOrWhiteSpace(processName))
+        {
+            var fromSystem = SystemCache.GetOrAdd(processName, LoadSystemBinary);
+            if (fromSystem is not null)
+                return fromSystem;
+        }
 
-        return SystemCache.GetOrAdd(processName, LoadSystemBinary);
+        return Placeholder(processName);
     }
 
     /// <summary>Returns a frozen icon, or null when the shell has nothing for this path.</summary>
@@ -46,6 +57,66 @@ public static class AppIcons
             return null;
 
         return Cache.GetOrAdd(executablePath, Load);
+    }
+
+    private static ImageSource Placeholder(string? processName)
+    {
+        var kind = Classify(processName);
+        return PlaceholderCache.GetOrAdd(kind, CreatePlaceholder);
+    }
+
+    private static string Classify(string? processName)
+    {
+        if (string.IsNullOrWhiteSpace(processName))
+            return "unknown";
+
+        if (processName.Equals("System", StringComparison.OrdinalIgnoreCase))
+            return "system";
+
+        if (processName.Contains("idle", StringComparison.OrdinalIgnoreCase))
+            return "idle";
+
+        return "unknown";
+    }
+
+    /// <summary>Draws a 32 px rounded badge with a glyph (gear for System, moon for Idle, ? otherwise).</summary>
+    private static ImageSource CreatePlaceholder(string kind)
+    {
+        var (glyph, glyphFont, glyphSize) = kind switch
+        {
+            "system" => ("\uE713", "Segoe MDL2 Assets", 16.0),
+            "idle" => ("\uE708", "Segoe MDL2 Assets", 16.0),
+            _ => ("?", "Segoe UI", 18.0)
+        };
+
+        var visual = new DrawingVisual();
+        using (var dc = visual.RenderOpen())
+        {
+            var background = new SolidColorBrush(Color.FromRgb(0x33, 0x41, 0x4F));
+            background.Freeze();
+
+            var foreground = new SolidColorBrush(Color.FromRgb(0xDC, 0xE7, 0xF1));
+            foreground.Freeze();
+
+            dc.DrawRoundedRectangle(background, null, new Rect(0, 0, 32, 32), 8, 8);
+
+            var typeface = new Typeface(new FontFamily(glyphFont), FontStyles.Normal, FontWeights.SemiBold, FontStretches.Normal);
+            var text = new FormattedText(
+                glyph,
+                CultureInfo.InvariantCulture,
+                FlowDirection.LeftToRight,
+                typeface,
+                glyphSize,
+                foreground,
+                1.0);
+
+            dc.DrawText(text, new Point((32 - text.Width) / 2, (32 - text.Height) / 2));
+        }
+
+        var bitmap = new RenderTargetBitmap(32, 32, 96, 96, PixelFormats.Pbgra32);
+        bitmap.Render(visual);
+        bitmap.Freeze();
+        return bitmap;
     }
 
     private static ImageSource? LoadSystemBinary(string processName)
