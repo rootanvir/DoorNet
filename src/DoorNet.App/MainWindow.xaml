@@ -800,15 +800,20 @@
                                                                 <ColumnDefinition Width="92" />
                                                             </Grid.ColumnDefinitions>
 
-                                                            <Image Grid.Column="0"
-                                                                   Source="{Binding Icon}"
-                                                                   Width="14"
-                                                                   Height="14"
-                                                                   Margin="54,0,0,0"
-                                                                   HorizontalAlignment="Left"
-                                                                   VerticalAlignment="Center"
-                                                                   Opacity="0.9"
-                                                                   RenderOptions.BitmapScalingMode="HighQuality" />
+                                                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="40,0,8,0">
+                                                                <Image Source="{Binding Icon}"
+                                                                       Width="14"
+                                                                       Height="14"
+                                                                       Margin="0,0,7,0"
+                                                                       VerticalAlignment="Center"
+                                                                       Opacity="0.9"
+                                                                       RenderOptions.BitmapScalingMode="HighQuality" />
+                                                                <TextBlock Text="{Binding ProcessName}"
+                                                                           FontSize="10.5"
+                                                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                                                           TextTrimming="CharacterEllipsis"
+                                                                           VerticalAlignment="Center" />
+                                                            </StackPanel>
 
                                                             <TextBlock Grid.Column="1" Text="{Binding Protocol}" FontSize="10.5" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" />
                                                             <TextBlock Grid.Column="2" Text="{Binding Local}" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
