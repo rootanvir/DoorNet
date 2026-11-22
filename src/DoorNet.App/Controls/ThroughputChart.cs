@@ -135,13 +135,16 @@ public sealed class ThroughputChart : FrameworkElement
 
         dc.PushClip(new RectangleGeometry(plot));
 
+        var downloadPoints = BuildSeries(points, X, Y, p => p.DownloadBytesPerSecond);
+        var uploadPoints = BuildSeries(points, X, Y, p => p.UploadBytesPerSecond);
+
         var downloadGeometry = new StreamGeometry();
         using (var ctx = downloadGeometry.Open())
         {
-            ctx.BeginFigure(new Point(X(0), plot.Bottom), isFilled: true, isClosed: true);
-            for (var i = 0; i < points.Count; i++)
-                ctx.LineTo(new Point(X(i), Y(points[i].DownloadBytesPerSecond)), isStroked: true, isSmoothJoin: false);
-            ctx.LineTo(new Point(X(points.Count - 1), plot.Bottom), isStroked: true, isSmoothJoin: false);
+            ctx.BeginFigure(new Point(downloadPoints[0].X, plot.Bottom), isFilled: true, isClosed: true);
+            ctx.LineTo(downloadPoints[0], isStroked: true, isSmoothJoin: false);
+            AppendSmoothPath(ctx, downloadPoints);
+            ctx.LineTo(new Point(downloadPoints[^1].X, plot.Bottom), isStroked: true, isSmoothJoin: false);
         }
 
         downloadGeometry.Freeze();
@@ -155,8 +158,8 @@ public sealed class ThroughputChart : FrameworkElement
         areaBrush.Freeze();
 
         dc.DrawGeometry(areaBrush, null, downloadGeometry);
-        dc.DrawGeometry(null, CreateLinePen(DownloadBrush, 2.0), BuildLine(points, X, Y, p => p.DownloadBytesPerSecond));
-        dc.DrawGeometry(null, CreateLinePen(UploadBrush, 1.6), BuildLine(points, X, Y, p => p.UploadBytesPerSecond));
+        dc.DrawGeometry(null, CreateLinePen(DownloadBrush, 2.0), BuildSmoothLine(downloadPoints));
+        dc.DrawGeometry(null, CreateLinePen(UploadBrush, 1.6), BuildSmoothLine(uploadPoints));
 
         DrawEndpoint(dc, new Point(X(points.Count - 1), Y(points[^1].DownloadBytesPerSecond)), DownloadBrush);
         DrawEndpoint(dc, new Point(X(points.Count - 1), Y(points[^1].UploadBytesPerSecond)), UploadBrush);
@@ -190,18 +193,48 @@ public sealed class ThroughputChart : FrameworkElement
         }
     }
 
-    private static StreamGeometry BuildLine(
+    private static List<Point> BuildSeries(
         IReadOnlyList<ThroughputPoint> points,
         Func<int, double> x,
         Func<double, double> y,
         Func<ThroughputPoint, double> select)
     {
+        var series = new List<Point>(points.Count);
+
+        for (var i = 0; i < points.Count; i++)
+            series.Add(new Point(x(i), y(select(points[i]))));
+
+        return series;
+    }
+
+    /// <summary>
+    /// Catmull-Rom spline through the samples, emitted as cubic Beziers so a 1 s spike
+    /// eases in and out instead of drawing a hard triangle.
+    /// </summary>
+    private static void AppendSmoothPath(StreamGeometryContext ctx, IReadOnlyList<Point> path)
+    {
+        for (var i = 0; i < path.Count - 1; i++)
+        {
+            var p0 = path[Math.Max(0, i - 1)];
+            var p1 = path[i];
+            var p2 = path[i + 1];
+            var p3 = path[Math.Min(path.Count - 1, i + 2)];
+
+            var c1 = new Point(p1.X + ((p2.X - p0.X) / 6.0), p1.Y + ((p2.Y - p0.Y) / 6.0));
+            var c2 = new Point(p2.X - ((p3.X - p1.X) / 6.0), p2.Y - ((p3.Y - p1.Y) / 6.0));
+
+            ctx.BezierTo(c1, c2, p2, isStroked: true, isSmoothJoin: true);
+        }
+    }
+
+    private static StreamGeometry BuildSmoothLine(IReadOnlyList<Point> path)
+    {
         var geometry = new StreamGeometry();
+
         using (var ctx = geometry.Open())
         {
-            ctx.BeginFigure(new Point(x(0), y(select(points[0]))), isFilled: false, isClosed: false);
-            for (var i = 1; i < points.Count; i++)
-                ctx.LineTo(new Point(x(i), y(select(points[i]))), isStroked: true, isSmoothJoin: true);
+            ctx.BeginFigure(path[0], isFilled: false, isClosed: false);
+            AppendSmoothPath(ctx, path);
         }
 
         geometry.Freeze();
