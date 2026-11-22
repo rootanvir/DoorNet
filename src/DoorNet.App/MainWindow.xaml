@@ -737,6 +737,14 @@
                                                             <TextBlock Text="{Binding Summary}" Style="{StaticResource Caption}" Margin="0,2,0,0" TextTrimming="CharacterEllipsis" />
                                                         </StackPanel>
                                                     </Grid>
+
+                                                    <TextBlock Grid.Column="1" Text="{Binding ProtocolSummary}" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Grid.Column="2" Text="{Binding LocalSummary}" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Grid.Column="3" Text="{Binding RemoteSummary}" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                                    <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
+                                                        <Ellipse Width="5" Height="5" Fill="{Binding StateBrush}" Margin="0,0,5,0" VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding StateSummary}" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" />
+                                                    </StackPanel>
                                                 </Grid>
                                             </Border>
 

@@ -352,6 +352,12 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         {
             var first = group.Items[0];
             var established = group.Items.Count(c => c.State is "Established" or "Open");
+            var protocols = group.Items.Select(c => c.ProtocolLabel).Distinct(StringComparer.OrdinalIgnoreCase).ToList();
+            var localCount = group.Items.Select(c => c.LocalEndpoint).Distinct(StringComparer.Ordinal).Count();
+            var remoteCount = group.Items.Where(c => c.RemotePort != 0)
+                .Select(c => c.RemoteEndpoint)
+                .Distinct(StringComparer.Ordinal)
+                .Count();
 
             rows.Add(new ConnectionGroupRow(
                 group.Key,
@@ -359,10 +365,20 @@ public sealed class MainViewModel : ObservableObject, IDisposable
                 InitialOf(first.ProcessName),
                 AccentPalette.For(first.ProcessName),
                 AppIcons.ForProcess(first.ExecutablePath, first.ProcessName),
-                $"{group.Items.Count} {(group.Items.Count == 1 ? "conn" : "conns")} \u00B7 {established} active",
+                $"{group.Items.Count} {(group.Items.Count == 1 ? "conn" : "conns")}",
                 _expanded.Contains("conn|" + group.Key),
                 group.Items.Take(MaxConnectionRows).Select(ToRow).ToList(),
-                first.ExecutablePath ?? $"PID {first.ProcessId}"));
+                first.ExecutablePath ?? $"PID {first.ProcessId}",
+                protocols.Count switch
+                {
+                    0 => "\u2014",
+                    1 => protocols[0],
+                    _ => string.Join("/", protocols)
+                },
+                $"{localCount} {(localCount == 1 ? "endpoint" : "endpoints")}",
+                remoteCount == 0 ? "\u2014" : $"{remoteCount} {(remoteCount == 1 ? "host" : "hosts")}",
+                $"{established} active",
+                established > 0 ? ConnectionRow.LiveBrush : ConnectionRow.IdleBrush));
         }
 
         RowSync.Apply(Connections, rows, r => r.GroupKey);

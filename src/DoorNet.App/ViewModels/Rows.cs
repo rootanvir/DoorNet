@@ -81,7 +81,12 @@ public sealed record ConnectionGroupRow(
     string Summary,
     bool IsExpanded,
     IReadOnlyList<ConnectionRow> Connections,
-    string Tooltip)
+    string Tooltip,
+    string ProtocolSummary,
+    string LocalSummary,
+    string RemoteSummary,
+    string StateSummary,
+    Brush StateBrush)
 {
     public bool HasIcon => Icon is not null;
 
