@@ -70,6 +70,7 @@ totals, and firewall rule naming.
 | Top applications | `GetExtendedTcpTable` / `GetExtendedUdpTable` grouped by owning PID | none |
 | Per-app byte rates | Kernel ETW, `Microsoft-Windows-Kernel-Network` (`NetworkTCPIP`) | **admin** |
 | Per-app data totals | Accumulated per `(pid, image)` for the session, shown beside each rate | **admin** |
+| Remote server map | `ip-api.com` geolocation of public remote IPs, cached 30 days | internet |
 | Live connections | Same tables (IPv4 + IPv6, TCP + UDP) | none |
 
 Three deliberate correctness decisions:
@@ -159,6 +160,12 @@ milestones, elevation model, packaging and risk list: **[docs/ARCHITECTURE.md](d
 
 ## Notes
 
+- **Map:** the equirectangular world outline is Natural Earth 110m land data (public domain),
+  bundled as `Assets/world-land.geojson` and drawn as vector geometry. Remote endpoints are
+  geolocated with `ip-api.com` (free, no key), one lookup every 1.4 s, cached for 30 days in
+  `%LocalAppData%\DoorNet\geo-cache.json`. Private, loopback, link-local and reserved
+  addresses are filtered client-side and never leave the machine; only public remote IPs are
+  sent to the service.
 - **Themes:** the header sun/moon button switches light/dark instantly and the choice is
   saved to `%LocalAppData%\DoorNet\settings.json`. All UI colours are semantic brushes in
   `Styles/Palette.*.xaml`; the window repaints in place without a restart.
