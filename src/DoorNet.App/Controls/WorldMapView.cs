@@ -38,6 +38,9 @@ public sealed class WorldMapView : FrameworkElement
         typeof(WorldMapView),
         new FrameworkPropertyMetadata(Frozen("#35E08E"), FrameworkPropertyMetadataOptions.AffectsRender));
 
+    private const double LatTop = 85;
+    private const double LatBottom = -60;
+
     private static readonly Geometry Land = LoadLand();
 
     public IReadOnlyList<GeoMarker>? Markers
@@ -71,8 +74,8 @@ public sealed class WorldMapView : FrameworkElement
         if (width <= 8 || height <= 8)
             return;
 
-        var mapWidth = Math.Min(width, height * 2);
-        var mapHeight = mapWidth / 2;
+        var mapWidth = Math.Min(width, height * (360.0 / (LatTop - LatBottom)));
+        var mapHeight = mapWidth * ((LatTop - LatBottom) / 360.0);
         var left = (width - mapWidth) / 2;
         var top = (height - mapHeight) / 2;
 
@@ -89,7 +92,7 @@ public sealed class WorldMapView : FrameworkElement
         foreach (var marker in markers)
         {
             var x = left + ((marker.Longitude + 180) / 360 * mapWidth);
-            var y = top + ((90 - marker.Latitude) / 180 * mapHeight);
+            var y = top + ((LatTop - Math.Clamp(marker.Latitude, LatBottom, LatTop)) / (LatTop - LatBottom) * mapHeight);
 
             if (marker.IsLocal)
             {
@@ -153,7 +156,7 @@ public sealed class WorldMapView : FrameworkElement
         {
             var lon = position[0].GetDouble();
             var lat = position[1].GetDouble();
-            var point = new Point((lon + 180) / 360, (90 - lat) / 180);
+            var point = new Point((lon + 180) / 360, (LatTop - lat) / (LatTop - LatBottom));
 
             if (first)
             {
