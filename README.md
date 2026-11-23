@@ -80,8 +80,8 @@ Three deliberate correctness decisions:
    physical NIC. Summing everything double-counts, so DoorNet follows the single adapter
    that owns a default gateway and has moved the most bytes.
 2. **No fake per-app numbers.** Windows has no unprivileged per-process byte counters.
-   Unelevated, the app shows a reason instead of inventing a value; **Restart elevated**
-   relaunches it for the kernel ETW session.
+   Unelevated, the app shows a reason instead of inventing a value; **Enable per-app
+   meters** relaunches it for the kernel ETW session.
 3. **Never hijack the kernel logger.** `NT Kernel Logger` is one system-wide session.
    If Process Monitor, GlassWire or WPR already owns it, DoorNet reports that rather than
    stopping their session (it creates with `NoRestartOnCreate`).
@@ -105,7 +105,7 @@ Windows Firewall is stateful, so blocking **Out** also stops new downloads (the 
 never leave), while blocking **In** stops unsolicited incoming traffic — downloads the app
 initiated still return. Allow both directions to restore an app completely.
 
-The toolbar above the world map carries the **master switch** - `Firewall ON` / `Firewall OFF`:
+The **FIREWALL** tile at the start of the status row carries the **master switch** - `ON` / `OFF`:
 
 - **ON** arms every DoorNet rule; individual blocks take effect immediately.
 - **OFF** leaves the rules defined but *disabled* (`Enabled: No`), so all apps can connect
