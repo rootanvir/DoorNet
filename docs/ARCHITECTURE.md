@@ -152,10 +152,9 @@ branding are not reused).
 - Header: product mark, adapter summary, a disc-style firewall master switch and the theme
   toggle pinned to the far right so they survive tab switches; the stretch between them is
   reserved for the navigation tabs.
-- Status row: a clickable **FIREWALL** tile (ON/OFF master switch) followed by the download,
-  upload and session-total tiles.
+- Status row: download, upload and session-total tiles. Large tabular numerals.
 - Map card: title row with an inline live/paused pill next to the legend, then the world map.
-- Four status tiles: firewall master switch, download rate, upload rate, session total. Large tabular numerals.
+- Three status tiles: download rate, upload rate, session total. Large tabular numerals.
 - Main chart: 90 s dual-series area chart, auto-scaled, drawn natively (no chart library).
 - Split pane: top applications (left) and live connections (right, sortable grid).
 - Restrained palette: `#0E1217` canvas, `#151B22` cards, `#35E08E` download,

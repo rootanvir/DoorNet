@@ -136,67 +136,13 @@
                     </Grid.RowDefinitions>
                     <Grid Grid.Row="0">
                         <Grid.ColumnDefinitions>
-                            <ColumnDefinition Width="96" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                             <ColumnDefinition Width="*" />
                         </Grid.ColumnDefinitions>
 
-                        <!-- Firewall master switch -->
-                        <Button Grid.Column="0"
-                                Style="{StaticResource CardButton}"
-                                Command="{Binding ToggleFirewallCommand}"
-                                ToolTip="{Binding FirewallTooltip}"
-                                Margin="0,0,7,0">
-                            <Grid>
-                                <Grid.RowDefinitions>
-                                    <RowDefinition Height="Auto" />
-                                    <RowDefinition Height="*" />
-                                    <RowDefinition Height="Auto" />
-                                </Grid.RowDefinitions>
-
-                                <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="&#xEA18;"
-                                               FontFamily="{StaticResource GlyphFont}"
-                                               FontSize="10.5"
-                                               Margin="0,0,6,0"
-                                               VerticalAlignment="Center">
-                                        <TextBlock.Style>
-                                            <Style TargetType="TextBlock">
-                                                <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
-                                                <Style.Triggers>
-                                                    <DataTrigger Binding="{Binding IsFirewallEnabled}" Value="True">
-                                                        <Setter Property="Foreground" Value="{DynamicResource DownloadBrush}" />
-                                                    </DataTrigger>
-                                                </Style.Triggers>
-                                            </Style>
-                                        </TextBlock.Style>
-                                    </TextBlock>
-                                    <TextBlock Text="FIREWALL" Style="{StaticResource TileLabel}" />
-                                </StackPanel>
-
-                                <TextBlock Grid.Row="1" Margin="0,6,0,0" VerticalAlignment="Center">
-                                    <TextBlock.Style>
-                                        <Style TargetType="TextBlock" BasedOn="{StaticResource MetricValue}">
-                                            <Setter Property="FontSize" Value="22" />
-                                            <Setter Property="Text" Value="OFF" />
-                                            <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsFirewallEnabled}" Value="True">
-                                                    <Setter Property="Text" Value="ON" />
-                                                    <Setter Property="Foreground" Value="{DynamicResource DownloadBrush}" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </TextBlock.Style>
-                                </TextBlock>
-
-                                <TextBlock Grid.Row="2" Text="All apps" Style="{StaticResource Caption}" Margin="0,4,0,0" TextTrimming="CharacterEllipsis" />
-                            </Grid>
-                        </Button>
-
                         <!-- Download -->
-                        <Border Grid.Column="1" Style="{StaticResource Card}" Margin="7,0,7,0">
+                        <Border Grid.Column="0" Style="{StaticResource Card}" Margin="0,0,7,0">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
@@ -230,7 +176,7 @@
                         </Border>
 
                         <!-- Upload -->
-                        <Border Grid.Column="2" Style="{StaticResource Card}" Margin="7,0,7,0">
+                        <Border Grid.Column="1" Style="{StaticResource Card}" Margin="7,0,7,0">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
@@ -264,7 +210,7 @@
                         </Border>
 
                         <!-- Session total -->
-                        <Border Grid.Column="3" Style="{StaticResource Card}" Margin="7,0,0,0">
+                        <Border Grid.Column="2" Style="{StaticResource Card}" Margin="7,0,0,0">
                             <Grid>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto" />
@@ -274,7 +220,7 @@
 
                                 <StackPanel Orientation="Horizontal">
                                     <Rectangle Width="7" Height="7" Fill="{DynamicResource TextMutedBrush}" RadiusX="1.5" RadiusY="1.5" Margin="0,0,7,0" VerticalAlignment="Center" />
-                                    <TextBlock Text="DATA SESSION" Style="{StaticResource TileLabel}" />
+                                    <TextBlock Text="DATA THIS SESSION" Style="{StaticResource TileLabel}" />
                                 </StackPanel>
 
                                 <StackPanel Grid.Row="1" Orientation="Horizontal" VerticalAlignment="Center" Margin="0,6,0,0">
@@ -282,7 +228,7 @@
                                     <TextBlock Text="{Binding TotalUnit}" Style="{StaticResource MetricUnit}" />
                                 </StackPanel>
 
-                                <TextBlock Grid.Row="2" Text="{Binding SessionSplitText}" Style="{StaticResource Caption}" FontSize="9" Margin="0,4,0,0" TextTrimming="CharacterEllipsis" />
+                                <TextBlock Grid.Row="2" Text="{Binding SessionSplitText}" Style="{StaticResource Caption}" Margin="0,4,0,0" />
                             </Grid>
                         </Border>
                     </Grid>
