@@ -57,15 +57,22 @@
                     </StackPanel>
                 </StackPanel>
 
-                <!-- Theme toggle stays in the header: every tab needs it. -->
-                <Button Grid.Column="2"
-                        Style="{StaticResource IconButton}"
-                        Content="{Binding ThemeGlyph}"
-                        ToolTip="{Binding ThemeTooltip}"
-                        Command="{Binding ToggleThemeCommand}"
-                        AutomationProperties.AutomationId="ThemeToggle"
-                        AutomationProperties.Name="Switch theme"
-                        VerticalAlignment="Center" />
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Button Command="{Binding ToggleFirewallCommand}"
+                            Style="{StaticResource FirewallSwitch}"
+                            ToolTip="{Binding FirewallTooltip}"
+                            AutomationProperties.Name="Firewall master switch"
+                            Margin="0,0,8,0" />
+
+                    <!-- Theme toggle stays in the header: every tab needs it. -->
+                    <Button Style="{StaticResource IconButton}"
+                            Content="{Binding ThemeGlyph}"
+                            ToolTip="{Binding ThemeTooltip}"
+                            Command="{Binding ToggleThemeCommand}"
+                            AutomationProperties.AutomationId="ThemeToggle"
+                            AutomationProperties.Name="Switch theme"
+                            VerticalAlignment="Center" />
+                </StackPanel>
 
             </Grid>
         </Border>
@@ -149,7 +156,7 @@
                                 </Grid.RowDefinitions>
 
                                 <StackPanel Orientation="Horizontal">
-                                    <TextBlock Text="&#xE785;"
+                                    <TextBlock Text="&#xEA18;"
                                                FontFamily="{StaticResource GlyphFont}"
                                                FontSize="10.5"
                                                Margin="0,0,6,0"

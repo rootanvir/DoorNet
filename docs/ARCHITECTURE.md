@@ -149,8 +149,9 @@ Dark, dense, instrument-panel feel — closer to Task Manager's Performance tab 
 consumer dashboard. No GlassWire visual language (its palette, iconography, layout and
 branding are not reused).
 
-- Header: product mark, adapter summary, and the theme toggle pinned to the far right so it
-  survives tab switches; the stretch between them is reserved for the navigation tabs.
+- Header: product mark, adapter summary, a disc-style firewall master switch and the theme
+  toggle pinned to the far right so they survive tab switches; the stretch between them is
+  reserved for the navigation tabs.
 - Status row: a clickable **FIREWALL** tile (ON/OFF master switch) followed by the download,
   upload and session-total tiles.
 - Map card: title row with an inline live/paused pill next to the legend, then the world map.

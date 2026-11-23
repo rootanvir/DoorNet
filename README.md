@@ -105,7 +105,8 @@ Windows Firewall is stateful, so blocking **Out** also stops new downloads (the 
 never leave), while blocking **In** stops unsolicited incoming traffic — downloads the app
 initiated still return. Allow both directions to restore an app completely.
 
-The **FIREWALL** tile at the start of the status row carries the **master switch** - `ON` / `OFF`:
+The **disc switch** beside the theme button (header, top right) and the **FIREWALL** tile at the
+start of the status row both carry the **master switch** - green `ON`, red `OFF`:
 
 - **ON** arms every DoorNet rule; individual blocks take effect immediately.
 - **OFF** leaves the rules defined but *disabled* (`Enabled: No`), so all apps can connect
