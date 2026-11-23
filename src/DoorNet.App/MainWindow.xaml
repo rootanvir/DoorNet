@@ -57,6 +57,16 @@
                     </StackPanel>
                 </StackPanel>
 
+                <!-- Theme toggle stays in the header: every tab needs it. -->
+                <Button Grid.Column="2"
+                        Style="{StaticResource IconButton}"
+                        Content="{Binding ThemeGlyph}"
+                        ToolTip="{Binding ThemeTooltip}"
+                        Command="{Binding ToggleThemeCommand}"
+                        AutomationProperties.AutomationId="ThemeToggle"
+                        AutomationProperties.Name="Switch theme"
+                        VerticalAlignment="Center" />
+
             </Grid>
         </Border>
 
@@ -118,128 +128,7 @@
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
                     </Grid.RowDefinitions>
-                    <Border Grid.Row="0" Style="{StaticResource Card}" Padding="12,8">
-                        <Grid>
-                            <Grid.ColumnDefinitions>
-                                <ColumnDefinition Width="Auto" />
-                                <ColumnDefinition Width="*" />
-                            </Grid.ColumnDefinitions>
-
-                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
-                                <Button Command="{Binding ToggleFirewallCommand}"
-                                        Style="{StaticResource GhostButton}"
-                                        Padding="10,6"
-                                        ToolTip="{Binding FirewallTooltip}">
-                                    <StackPanel Orientation="Horizontal">
-                                        <TextBlock Text="&#xE785;"
-                                                   FontFamily="{StaticResource GlyphFont}"
-                                                   FontSize="12"
-                                                   Margin="0,0,6,0"
-                                                   VerticalAlignment="Center">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsFirewallEnabled}" Value="True">
-                                                            <Setter Property="Foreground" Value="{DynamicResource DownloadBrush}" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
-                                        <TextBlock Text="{Binding FirewallStateText}"
-                                                   FontSize="11"
-                                                   FontWeight="SemiBold"
-                                                   VerticalAlignment="Center">
-                                            <TextBlock.Style>
-                                                <Style TargetType="TextBlock">
-                                                    <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsFirewallEnabled}" Value="True">
-                                                            <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </TextBlock.Style>
-                                        </TextBlock>
-                                    </StackPanel>
-                                </Button>
-
-                                <Border Padding="10,5"
-                                        CornerRadius="20"
-                                        BorderThickness="1"
-                                        Margin="10,0,0,0"
-                                        ToolTip="{Binding LastError}">
-                                    <Border.Style>
-                                        <Style TargetType="Border">
-                                            <Setter Property="Background" Value="{DynamicResource LivePillBrush}" />
-                                            <Setter Property="BorderBrush" Value="{DynamicResource LivePillBorderBrush}" />
-                                            <Style.Triggers>
-                                                <DataTrigger Binding="{Binding IsCapturing}" Value="False">
-                                                    <Setter Property="Background" Value="{DynamicResource PausedPillBrush}" />
-                                                    <Setter Property="BorderBrush" Value="{DynamicResource PausedPillBorderBrush}" />
-                                                </DataTrigger>
-                                            </Style.Triggers>
-                                        </Style>
-                                    </Border.Style>
-                                    <StackPanel Orientation="Horizontal">
-                                        <Ellipse Width="6" Height="6" Margin="0,0,6,0" VerticalAlignment="Center">
-                                            <Ellipse.Style>
-                                                <Style TargetType="Ellipse">
-                                                    <Setter Property="Fill" Value="{DynamicResource DownloadBrush}" />
-                                                    <Style.Triggers>
-                                                        <DataTrigger Binding="{Binding IsCapturing}" Value="False">
-                                                            <Setter Property="Fill" Value="{DynamicResource TextMutedBrush}" />
-                                                        </DataTrigger>
-                                                    </Style.Triggers>
-                                                </Style>
-                                            </Ellipse.Style>
-                                        </Ellipse>
-                                        <TextBlock Text="{Binding StatusText}"
-                                                   FontSize="11"
-                                                   FontWeight="SemiBold"
-                                                   Foreground="{DynamicResource TextSecondaryBrush}" />
-                                    </StackPanel>
-                                </Border>
-
-                                <Button Style="{StaticResource IconButton}"
-                                        Content="{Binding ThemeGlyph}"
-                                        ToolTip="{Binding ThemeTooltip}"
-                                        Command="{Binding ToggleThemeCommand}"
-                                        AutomationProperties.AutomationId="ThemeToggle"
-                                        AutomationProperties.Name="Switch theme"
-                                        Margin="10,0,0,0" />
-                            </StackPanel>
-
-                            <StackPanel Grid.Column="1"
-                                        Orientation="Horizontal"
-                                        HorizontalAlignment="Right"
-                                        VerticalAlignment="Center"
-                                        Margin="10,0,0,0">
-                                <Button Content="{Binding CaptureButtonLabel}"
-                                        Command="{Binding ToggleCaptureCommand}"
-                                        Style="{StaticResource GhostButton}"
-                                        FontSize="11"
-                                        Padding="10,5" />
-                                <Button Content="Reset"
-                                        Command="{Binding ResetSessionCommand}"
-                                        Style="{StaticResource GhostButton}"
-                                        FontSize="11"
-                                        Padding="10,5"
-                                        Margin="8,0,0,0"
-                                        ToolTip="Reset the session totals" />
-                                <Button Content="Elevate"
-                                        Command="{Binding RestartElevatedCommand}"
-                                        Style="{StaticResource GhostButton}"
-                                        FontSize="11"
-                                        Padding="10,5"
-                                        Margin="8,0,0,0"
-                                        ToolTip="Restart with administrator rights to measure per-app byte usage"
-                                        Visibility="{Binding CanOfferElevation, Converter={StaticResource BoolToVis}}" />
-                            </StackPanel>
-                        </Grid>
-                    </Border>
-                    <Grid Grid.Row="1" Margin="0,14,0,0">
+                    <Grid Grid.Row="0">
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*" />
                         <ColumnDefinition Width="*" />
@@ -335,9 +224,10 @@
                             </Border>
                 </Grid>
 
-                    <Border Grid.Row="2" Style="{StaticResource Card}" Margin="0,14,0,0" MinHeight="250" Padding="16,13,14,12">
+                    <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,14,0,0" MinHeight="300" Padding="16,13,14,12">
                         <Grid>
                             <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto" />
                                 <RowDefinition Height="Auto" />
                                 <RowDefinition Height="*" />
                             </Grid.RowDefinitions>
@@ -357,7 +247,114 @@
                                 </StackPanel>
                             </Grid>
     
-                            <controls:WorldMapView Grid.Row="1"
+                            <!-- Session controls sit above the world, using the card's spare width -->
+                            <Grid Grid.Row="1" Margin="0,9,0,2">
+                                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+                                    <Button Command="{Binding ToggleFirewallCommand}"
+                                            Style="{StaticResource GhostButton}"
+                                            FontSize="10.5"
+                                            Padding="9,4"
+                                            ToolTip="{Binding FirewallTooltip}">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="&#xE785;"
+                                                       FontFamily="{StaticResource GlyphFont}"
+                                                       FontSize="11"
+                                                       Margin="0,0,6,0"
+                                                       VerticalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsFirewallEnabled}" Value="True">
+                                                                <Setter Property="Foreground" Value="{DynamicResource DownloadBrush}" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                            <TextBlock Text="{Binding FirewallStateText}"
+                                                       FontSize="10.5"
+                                                       FontWeight="SemiBold"
+                                                       VerticalAlignment="Center">
+                                                <TextBlock.Style>
+                                                    <Style TargetType="TextBlock">
+                                                        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsFirewallEnabled}" Value="True">
+                                                                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </TextBlock.Style>
+                                            </TextBlock>
+                                        </StackPanel>
+                                    </Button>
+
+                                    <Border Padding="9,4"
+                                            CornerRadius="20"
+                                            BorderThickness="1"
+                                            Margin="8,0,0,0"
+                                            ToolTip="{Binding LastError}">
+                                        <Border.Style>
+                                            <Style TargetType="Border">
+                                                <Setter Property="Background" Value="{DynamicResource LivePillBrush}" />
+                                                <Setter Property="BorderBrush" Value="{DynamicResource LivePillBorderBrush}" />
+                                                <Style.Triggers>
+                                                    <DataTrigger Binding="{Binding IsCapturing}" Value="False">
+                                                        <Setter Property="Background" Value="{DynamicResource PausedPillBrush}" />
+                                                        <Setter Property="BorderBrush" Value="{DynamicResource PausedPillBorderBrush}" />
+                                                    </DataTrigger>
+                                                </Style.Triggers>
+                                            </Style>
+                                        </Border.Style>
+                                        <StackPanel Orientation="Horizontal">
+                                            <Ellipse Width="6" Height="6" Margin="0,0,6,0" VerticalAlignment="Center">
+                                                <Ellipse.Style>
+                                                    <Style TargetType="Ellipse">
+                                                        <Setter Property="Fill" Value="{DynamicResource DownloadBrush}" />
+                                                        <Style.Triggers>
+                                                            <DataTrigger Binding="{Binding IsCapturing}" Value="False">
+                                                                <Setter Property="Fill" Value="{DynamicResource TextMutedBrush}" />
+                                                            </DataTrigger>
+                                                        </Style.Triggers>
+                                                    </Style>
+                                                </Ellipse.Style>
+                                            </Ellipse>
+                                            <TextBlock Text="{Binding StatusText}"
+                                                       FontSize="10.5"
+                                                       FontWeight="SemiBold"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}" />
+                                        </StackPanel>
+                                    </Border>
+                                </StackPanel>
+
+                                <StackPanel Orientation="Horizontal"
+                                            HorizontalAlignment="Right"
+                                            VerticalAlignment="Center">
+                                    <Button Content="{Binding CaptureButtonLabel}"
+                                            Command="{Binding ToggleCaptureCommand}"
+                                            Style="{StaticResource GhostButton}"
+                                            FontSize="10.5"
+                                            Padding="9,4" />
+                                    <Button Content="Reset"
+                                            Command="{Binding ResetSessionCommand}"
+                                            Style="{StaticResource GhostButton}"
+                                            FontSize="10.5"
+                                            Padding="9,4"
+                                            Margin="6,0,0,0"
+                                            ToolTip="Reset the session totals" />
+                                    <Button Content="Elevate"
+                                            Command="{Binding RestartElevatedCommand}"
+                                            Style="{StaticResource GhostButton}"
+                                            FontSize="10.5"
+                                            Padding="9,4"
+                                            Margin="6,0,0,0"
+                                            ToolTip="Restart with administrator rights to measure per-app byte usage"
+                                            Visibility="{Binding CanOfferElevation, Converter={StaticResource BoolToVis}}" />
+                                </StackPanel>
+                            </Grid>
+
+                            <controls:WorldMapView Grid.Row="2"
                                                    Markers="{Binding MapMarkers}"
                                                    Margin="0,8,0,0"
                                                    LandBrush="{DynamicResource MapLandBrush}"

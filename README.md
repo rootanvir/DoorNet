@@ -105,7 +105,7 @@ Windows Firewall is stateful, so blocking **Out** also stops new downloads (the 
 never leave), while blocking **In** stops unsolicited incoming traffic — downloads the app
 initiated still return. Allow both directions to restore an app completely.
 
-The session bar above the meters carries the **master switch** - `Firewall ON` / `Firewall OFF`:
+The toolbar above the world map carries the **master switch** - `Firewall ON` / `Firewall OFF`:
 
 - **ON** arms every DoorNet rule; individual blocks take effect immediately.
 - **OFF** leaves the rules defined but *disabled* (`Enabled: No`), so all apps can connect
@@ -166,7 +166,7 @@ milestones, elevation model, packaging and risk list: **[docs/ARCHITECTURE.md](d
   `%LocalAppData%\DoorNet\geo-cache.json`. Private, loopback, link-local and reserved
   addresses are filtered client-side and never leave the machine; only public remote IPs are
   sent to the service.
-- **Themes:** the session bar's sun/moon button switches light/dark instantly and the choice is
+- **Themes:** the header's sun/moon button switches light/dark instantly (it stays visible on every tab) and the choice is
   saved to `%LocalAppData%\DoorNet\settings.json`. All UI colours are semantic brushes in
   `Styles/Palette.*.xaml`; the window repaints in place without a restart.
 - **Windows 10 title bar:** `DWMWA_CAPTION_COLOR` is Windows 11-only, and Windows 10 ignores

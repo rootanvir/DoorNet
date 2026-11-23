@@ -71,7 +71,7 @@ v1 filters adapters by type and status; v2 adds per-adapter selection in Setting
 
 - **Current state:** one process. When launched elevated, it opens the kernel ETW session
   itself (`EtwPerAppUsageSource`); unelevated, the source reports why it is unavailable and
-  the session bar offers **Elevate** (UAC relaunch). This is the fastest path to a
+  the map toolbar offers **Elevate** (UAC relaunch). This is the fastest path to a
   working feature and is fine for a single-user desktop app.
 - **Kernel provider gotcha:** `TraceEventSession.EnableKernelProvider` returns `false` on
   the *normal* success path for a `NT Kernel Logger` session (the bool is only `true` when
@@ -149,10 +149,10 @@ Dark, dense, instrument-panel feel — closer to Task Manager's Performance tab 
 consumer dashboard. No GlassWire visual language (its palette, iconography, layout and
 branding are not reused).
 
-- Header: product mark and adapter summary, with the space to its right reserved for the
-  navigation tabs.
-- Session bar (right column, above the meters): firewall master switch, live/paused pill,
-  theme toggle, and capture/reset/elevate actions.
+- Header: product mark, adapter summary, and the theme toggle pinned to the far right so it
+  survives tab switches; the stretch between them is reserved for the navigation tabs.
+- Map card: title and legend row, then a session toolbar (firewall master switch, live/paused
+  pill, capture/reset/elevate actions) directly above the world map.
 - Three stat tiles: download rate, upload rate, session total. Large tabular numerals.
 - Main chart: 90 s dual-series area chart, auto-scaled, drawn natively (no chart library).
 - Split pane: top applications (left) and live connections (right, sortable grid).

@@ -98,32 +98,22 @@ public sealed class WorldMapView : FrameworkElement
 
         var dpi = VisualTreeHelper.GetDpi(this).PixelsPerDip;
 
-        // Fill the card edge to edge. Rather than letterboxing the fixed world band, derive
-        // the visible latitudes from the aspect ratio - a wider card trades polar margin for
-        // equatorial detail, so there is never dead space left or right of the map.
-        var mapRect = new Rect(0, 0, width, height);
-        var latSpan = Math.Clamp(360.0 * height / width, 70, FixedLatTop - FixedLatBottom);
-        var latBottom = Math.Max(-58.0, FixedLatBottom);
-        var latTop = latBottom + latSpan;
-        if (latTop > FixedLatTop)
-        {
-            latTop = FixedLatTop;
-            latBottom = latTop - latSpan;
-        }
+        // Keep the world's 360:145 band intact and centre it, so the card carries the same
+        // margins on the left and right that the rest of the dashboard uses.
+        var mapWidth = Math.Min(width, height * (360.0 / (FixedLatTop - FixedLatBottom)));
+        var mapHeight = mapWidth * ((FixedLatTop - FixedLatBottom) / 360.0);
+        var left = (width - mapWidth) / 2;
+        var top = (height - mapHeight) / 2;
+        var mapRect = new Rect(left, top, mapWidth, mapHeight);
 
         dc.DrawRoundedRectangle(OceanBrush, null, mapRect, 8, 8);
 
         dc.PushClip(new RectangleGeometry(mapRect, 8, 8));
-        DrawGraticule(dc, mapRect, latTop, latBottom);
+        DrawGraticule(dc, mapRect, FixedLatTop, FixedLatBottom);
 
-        var scaleY = (FixedLatTop - FixedLatBottom) / latSpan;
-        var offsetY = (FixedLatTop - latTop) / latSpan;
-
-        dc.PushTransform(new ScaleTransform(width, height));
-        dc.PushTransform(new TranslateTransform(0, -offsetY));
-        dc.PushTransform(new ScaleTransform(1, scaleY));
+        dc.PushTransform(new TranslateTransform(left, top));
+        dc.PushTransform(new ScaleTransform(mapWidth, mapHeight));
         dc.DrawGeometry(LandBrush, CoastPen, Land);
-        dc.Pop();
         dc.Pop();
         dc.Pop();
         dc.Pop();
@@ -134,11 +124,8 @@ public sealed class WorldMapView : FrameworkElement
         {
             foreach (var marker in markers)
             {
-                if (marker.Latitude > latTop || marker.Latitude < latBottom)
-                    continue;
-
-                var x = (marker.Longitude + 180) / 360 * width;
-                var y = (latTop - marker.Latitude) / latSpan * height;
+                var x = left + ((marker.Longitude + 180) / 360 * mapWidth);
+                var y = top + ((FixedLatTop - Math.Clamp(marker.Latitude, FixedLatBottom, FixedLatTop)) / (FixedLatTop - FixedLatBottom) * mapHeight);
                 var position = new Point(x, y);
 
                 if (marker.IsLocal)
