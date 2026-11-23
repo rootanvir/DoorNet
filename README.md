@@ -11,7 +11,7 @@ firewall control need administrator rights; cancelling keeps the limited view wi
 
 ![DoorNet running](docs/screenshot.png)
 
-The window is organised into two left-rail tabs: **Monitor** (everything below) and
+The header carries two tabs: **Monitor** (everything below) and
 **Actions**, an empty stage for the upcoming one-click controls and automations.
 
 <details>

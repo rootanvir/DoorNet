@@ -55,6 +55,23 @@
                                Foreground="{DynamicResource TextPrimaryBrush}" />
                 </StackPanel>
 
+                <StackPanel Grid.Column="1"
+                            Orientation="Horizontal"
+                            VerticalAlignment="Center"
+                            Margin="24,0,0,0">
+                    <RadioButton x:Name="MonitorTab"
+                                 GroupName="NavTabs"
+                                 IsChecked="True"
+                                 Style="{StaticResource HeaderTab}"
+                                 Tag="&#xE9D9;"
+                                 Content="Monitor" />
+                    <RadioButton x:Name="ActionsTab"
+                                 GroupName="NavTabs"
+                                 Style="{StaticResource HeaderTab}"
+                                 Tag="&#xE945;"
+                                 Content="Actions" />
+                </StackPanel>
+
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
                     <Button Command="{Binding ToggleFirewallCommand}"
                             Style="{StaticResource FirewallSwitch}"
@@ -75,14 +92,10 @@
             </Grid>
         </Border>
 
-        <!-- Navigation -->
-        <TabControl Grid.Row="1"
-                    Style="{StaticResource NavTabControl}"
-                    TabStripPlacement="Left">
-            <TabItem Header="Monitor"
-                     Tag="&#xE9D9;"
-                     Style="{StaticResource NavTabItem}">
-        <Grid Margin="20,16,20,14">
+        <!-- Views -->
+        <Grid Grid.Row="1">
+            <Grid Margin="20,16,20,14"
+                  Visibility="{Binding IsChecked, ElementName=MonitorTab, Converter={StaticResource BoolToVis}}">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" MinHeight="240" />
@@ -1009,12 +1022,9 @@
                 </Border>
             </Grid>
         </Grid>
-            </TabItem>
 
-            <TabItem Header="Actions"
-                     Tag="&#xE945;"
-                     Style="{StaticResource NavTabItem}">
-                <Grid Margin="20,16,20,14">
+            <Grid Margin="20,16,20,14"
+                  Visibility="{Binding IsChecked, ElementName=ActionsTab, Converter={StaticResource BoolToVis}}">
                     <Grid.RowDefinitions>
                         <RowDefinition Height="Auto" />
                         <RowDefinition Height="*" />
@@ -1046,9 +1056,8 @@
                                        Margin="0,4,0,0" />
                         </StackPanel>
                     </Border>
-                </Grid>
-            </TabItem>
-        </TabControl>
+            </Grid>
+        </Grid>
 
         <!-- Footer -->
         <Border Grid.Row="2"
