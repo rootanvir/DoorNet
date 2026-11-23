@@ -510,10 +510,12 @@
                                                                     <MenuItem.Style>
                                                                         <Style TargetType="MenuItem" BasedOn="{StaticResource AccessMenuItem}">
                                                                             <Setter Property="Background" Value="{DynamicResource DangerSoftBrush}" />
+                                                                            <Setter Property="BorderBrush" Value="{DynamicResource DangerSoftBorderBrush}" />
                                                                             <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
                                                                             <Style.Triggers>
                                                                                 <DataTrigger Binding="{Binding PlacementTarget.DataContext.InBlocked, RelativeSource={RelativeSource AncestorType=ContextMenu}}" Value="True">
                                                                                     <Setter Property="Background" Value="{DynamicResource SuccessSoftBrush}" />
+                                                                                    <Setter Property="BorderBrush" Value="{DynamicResource SuccessSoftBorderBrush}" />
                                                                                     <Setter Property="Foreground" Value="{DynamicResource DownloadBrush}" />
                                                                                 </DataTrigger>
                                                                             </Style.Triggers>
@@ -604,10 +606,12 @@
                                                                     <MenuItem.Style>
                                                                         <Style TargetType="MenuItem" BasedOn="{StaticResource AccessMenuItem}">
                                                                             <Setter Property="Background" Value="{DynamicResource DangerSoftBrush}" />
+                                                                            <Setter Property="BorderBrush" Value="{DynamicResource DangerSoftBorderBrush}" />
                                                                             <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
                                                                             <Style.Triggers>
                                                                                 <DataTrigger Binding="{Binding PlacementTarget.DataContext.OutBlocked, RelativeSource={RelativeSource AncestorType=ContextMenu}}" Value="True">
                                                                                     <Setter Property="Background" Value="{DynamicResource SuccessSoftBrush}" />
+                                                                                    <Setter Property="BorderBrush" Value="{DynamicResource SuccessSoftBorderBrush}" />
                                                                                     <Setter Property="Foreground" Value="{DynamicResource DownloadBrush}" />
                                                                                 </DataTrigger>
                                                                             </Style.Triggers>
