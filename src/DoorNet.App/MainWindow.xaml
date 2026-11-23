@@ -385,16 +385,16 @@
                                     <ColumnDefinition Width="20" />
                                     <ColumnDefinition Width="38" />
                                     <ColumnDefinition Width="*" />
-                                    <ColumnDefinition Width="86" />
-                                    <ColumnDefinition Width="86" />
-                                    <ColumnDefinition Width="186" />
+                                    <ColumnDefinition Width="92" />
+                                    <ColumnDefinition Width="92" />
+                                    <ColumnDefinition Width="196" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Grid.ColumnSpan="3" Text="APPLICATION" Style="{StaticResource TableHeader}" />
                                 <TextBlock Grid.Column="3" Text="DOWNLOAD" Style="{StaticResource TableHeader}" TextAlignment="Center" ToolTip="Download direction (inbound). Click the pill to block or allow it." />
                                 <TextBlock Grid.Column="4" Text="UPLOAD" Style="{StaticResource TableHeader}" TextAlignment="Center" ToolTip="Upload direction (outbound). Click the pill to block or allow it." />
                                 <Grid Grid.Column="5">
                                     <Grid.ColumnDefinitions>
-                                        <ColumnDefinition Width="64" />
+                                        <ColumnDefinition Width="74" />
                                         <ColumnDefinition Width="60" />
                                         <ColumnDefinition Width="62" />
                                     </Grid.ColumnDefinitions>
@@ -419,9 +419,9 @@
                                                         <ColumnDefinition Width="20" />
                                                         <ColumnDefinition Width="38" />
                                                         <ColumnDefinition Width="*" />
-                                                        <ColumnDefinition Width="86" />
-                                                        <ColumnDefinition Width="86" />
-                                                        <ColumnDefinition Width="186" />
+                                                        <ColumnDefinition Width="92" />
+                                                        <ColumnDefinition Width="92" />
+                                                        <ColumnDefinition Width="196" />
                                                     </Grid.ColumnDefinitions>
 
                                                     <Button Grid.Column="0"
@@ -750,9 +750,9 @@
                                                             <Grid Margin="0,2">
                                                                 <Grid.ColumnDefinitions>
                                                                     <ColumnDefinition Width="*" />
-                                                                    <ColumnDefinition Width="86" />
-                                                                    <ColumnDefinition Width="86" />
-                                                                    <ColumnDefinition Width="186" />
+                                                                    <ColumnDefinition Width="92" />
+                                                                    <ColumnDefinition Width="92" />
+                                                                    <ColumnDefinition Width="196" />
                                                                 </Grid.ColumnDefinitions>
 
                                                                 <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
@@ -910,15 +910,15 @@
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="1.8*" />
-                                    <ColumnDefinition Width="48" />
+                                    <ColumnDefinition Width="58" />
                                     <ColumnDefinition Width="1.05*" />
                                     <ColumnDefinition Width="1.15*" />
-                                    <ColumnDefinition Width="92" />
+                                    <ColumnDefinition Width="104" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Text="APPLICATION" Style="{StaticResource TableHeader}" />
-                                <TextBlock Grid.Column="1" Text="PROTO" Style="{StaticResource TableHeader}" />
-                                <TextBlock Grid.Column="2" Text="LOCAL" Style="{StaticResource TableHeader}" />
-                                <TextBlock Grid.Column="3" Text="REMOTE" Style="{StaticResource TableHeader}" />
+                                <TextBlock Grid.Column="1" Text="PROTO" Style="{StaticResource TableHeader}" Margin="0,0,12,0" />
+                                <TextBlock Grid.Column="2" Text="LOCAL" Style="{StaticResource TableHeader}" Margin="0,0,12,0" />
+                                <TextBlock Grid.Column="3" Text="REMOTE" Style="{StaticResource TableHeader}" Margin="0,0,12,0" />
                                 <TextBlock Grid.Column="4" Text="STATE" Style="{StaticResource TableHeader}" />
                             </Grid>
                         </Border>
@@ -935,10 +935,10 @@
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="1.8*" />
-                                                        <ColumnDefinition Width="48" />
+                                                        <ColumnDefinition Width="58" />
                                                         <ColumnDefinition Width="1.05*" />
                                                         <ColumnDefinition Width="1.15*" />
-                                                        <ColumnDefinition Width="92" />
+                                                        <ColumnDefinition Width="104" />
                                                     </Grid.ColumnDefinitions>
 
                                                     <Grid Grid.Column="0">
@@ -973,9 +973,9 @@
                                                         </StackPanel>
                                                     </Grid>
 
-                                                    <TextBlock Grid.Column="1" Text="{Binding ProtocolSummary}" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                                                    <TextBlock Grid.Column="2" Text="{Binding LocalSummary}" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
-                                                    <TextBlock Grid.Column="3" Text="{Binding RemoteSummary}" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" />
+                                                    <TextBlock Grid.Column="1" Text="{Binding ProtocolSummary}" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,12,0" />
+                                                    <TextBlock Grid.Column="2" Text="{Binding LocalSummary}" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,12,0" />
+                                                    <TextBlock Grid.Column="3" Text="{Binding RemoteSummary}" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,12,0" />
                                                     <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
                                                         <Ellipse Width="5" Height="5" Fill="{Binding StateBrush}" Margin="0,0,5,0" VerticalAlignment="Center" />
                                                         <TextBlock Text="{Binding StateSummary}" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" />
@@ -991,10 +991,10 @@
                                                         <Grid Margin="0,2">
                                                             <Grid.ColumnDefinitions>
                                                                 <ColumnDefinition Width="1.8*" />
-                                                                <ColumnDefinition Width="48" />
+                                                                <ColumnDefinition Width="58" />
                                                                 <ColumnDefinition Width="1.05*" />
                                                                 <ColumnDefinition Width="1.15*" />
-                                                                <ColumnDefinition Width="92" />
+                                                                <ColumnDefinition Width="104" />
                                                             </Grid.ColumnDefinitions>
 
                                                             <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center" Margin="40,0,8,0">
@@ -1012,9 +1012,9 @@
                                                                            VerticalAlignment="Center" />
                                                             </StackPanel>
 
-                                                            <TextBlock Grid.Column="1" Text="{Binding Protocol}" FontSize="10.5" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" />
-                                                            <TextBlock Grid.Column="2" Text="{Binding Local}" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
-                                                            <TextBlock Grid.Column="3" Text="{Binding Remote}" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" />
+                                                            <TextBlock Grid.Column="1" Text="{Binding Protocol}" FontSize="10.5" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,12,0" />
+                                                            <TextBlock Grid.Column="2" Text="{Binding Local}" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,12,0" />
+                                                            <TextBlock Grid.Column="3" Text="{Binding Remote}" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,12,0" />
 
                                                             <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
                                                                 <Ellipse Width="5" Height="5" Fill="{Binding StateBrush}" VerticalAlignment="Center" Margin="0,0,5,0" />
