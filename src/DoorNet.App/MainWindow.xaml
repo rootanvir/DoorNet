@@ -910,13 +910,13 @@
                             <Grid>
                                 <Grid.ColumnDefinitions>
                                     <ColumnDefinition Width="1.8*" />
-                                    <ColumnDefinition Width="58" />
+                                    <ColumnDefinition Width="74" />
                                     <ColumnDefinition Width="1.05*" />
                                     <ColumnDefinition Width="1.15*" />
                                     <ColumnDefinition Width="104" />
                                 </Grid.ColumnDefinitions>
                                 <TextBlock Grid.Column="0" Text="APPLICATION" Style="{StaticResource TableHeader}" />
-                                <TextBlock Grid.Column="1" Text="PROTO" Style="{StaticResource TableHeader}" Margin="0,0,12,0" />
+                                <TextBlock Grid.Column="1" Text="PROTOCOL" Style="{StaticResource TableHeader}" Margin="0,0,12,0" />
                                 <TextBlock Grid.Column="2" Text="LOCAL" Style="{StaticResource TableHeader}" Margin="0,0,12,0" />
                                 <TextBlock Grid.Column="3" Text="REMOTE" Style="{StaticResource TableHeader}" Margin="0,0,12,0" />
                                 <TextBlock Grid.Column="4" Text="STATE" Style="{StaticResource TableHeader}" />
@@ -935,7 +935,7 @@
                                                 <Grid>
                                                     <Grid.ColumnDefinitions>
                                                         <ColumnDefinition Width="1.8*" />
-                                                        <ColumnDefinition Width="58" />
+                                                        <ColumnDefinition Width="74" />
                                                         <ColumnDefinition Width="1.05*" />
                                                         <ColumnDefinition Width="1.15*" />
                                                         <ColumnDefinition Width="104" />
@@ -991,7 +991,7 @@
                                                         <Grid Margin="0,2">
                                                             <Grid.ColumnDefinitions>
                                                                 <ColumnDefinition Width="1.8*" />
-                                                                <ColumnDefinition Width="58" />
+                                                                <ColumnDefinition Width="74" />
                                                                 <ColumnDefinition Width="1.05*" />
                                                                 <ColumnDefinition Width="1.15*" />
                                                                 <ColumnDefinition Width="104" />
