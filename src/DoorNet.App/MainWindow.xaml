@@ -46,6 +46,11 @@
                                  Style="{StaticResource HeaderTab}"
                                  Tag="&#xE9D9;"
                                  Content="Monitor" />
+                    <RadioButton x:Name="ScannerTab"
+                                 GroupName="NavTabs"
+                                 Style="{StaticResource HeaderTab}"
+                                 Tag="&#xE721;"
+                                 Content="Scanner" />
                     <RadioButton x:Name="ActionsTab"
                                  GroupName="NavTabs"
                                  Style="{StaticResource HeaderTab}"
@@ -1003,6 +1008,41 @@
                 </Border>
             </Grid>
         </Grid>
+
+            <Grid Margin="20,16,20,14"
+                  Visibility="{Binding IsChecked, ElementName=ScannerTab, Converter={StaticResource BoolToVis}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <StackPanel>
+                    <TextBlock Text="Scanner" Style="{StaticResource SectionTitle}" FontSize="17" />
+                    <TextBlock Text="Network discovery and port scans will be built here."
+                               Style="{StaticResource Caption}"
+                               Margin="0,4,0,0" />
+                </StackPanel>
+
+                <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,14,0,0">
+                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <TextBlock Text="&#xE721;"
+                                   FontFamily="{StaticResource GlyphFont}"
+                                   FontSize="30"
+                                   HorizontalAlignment="Center"
+                                   Foreground="{DynamicResource TextMutedBrush}" />
+                        <TextBlock Text="Nothing here yet"
+                                   FontSize="13"
+                                   FontWeight="SemiBold"
+                                   HorizontalAlignment="Center"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                   Margin="0,12,0,0" />
+                        <TextBlock Text="Scan results will appear here once scanning is wired up."
+                                   Style="{StaticResource Caption}"
+                                   HorizontalAlignment="Center"
+                                   Margin="0,4,0,0" />
+                    </StackPanel>
+                </Border>
+            </Grid>
 
             <Grid Margin="20,16,20,14"
                   Visibility="{Binding IsChecked, ElementName=ActionsTab, Converter={StaticResource BoolToVis}}">

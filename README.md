@@ -11,8 +11,8 @@ firewall control need administrator rights; cancelling keeps the limited view wi
 
 ![DoorNet running](docs/screenshot.png)
 
-The header carries two tabs: **Monitor** (everything below) and
-**Actions**, an empty stage for the upcoming one-click controls and automations.
+The header carries three tabs: **Monitor** (everything below), **Scanner** (network
+discovery and port scans) and **Actions** (one-click controls and automations).
 
 <details>
 <summary>Light theme</summary>
