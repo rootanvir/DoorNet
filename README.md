@@ -77,7 +77,8 @@ totals, and firewall rule naming.
 | Live connections | Same tables (IPv4 + IPv6, TCP + UDP) | none |
 | Live connections | Same tables (IPv4 + IPv6, TCP + UDP) | none |
 | Local network scan | ICMP sweep, ARP cache + SendARP, reverse DNS / NetBIOS, 17-port probe | none |
-The **Scanner** tab sweeps the subnet of the active adapter and lists every host it can prove
+The **Scanner** tab is split into sections - **Devices** today, **Port scan** next. Devices sweeps
+the subnet of the active adapter and lists every host it can prove
 exists: type, name, IP, MAC, system guess, vendor, open ports, latency and whether it is
 answering right now. Names come from reverse DNS and NetBIOS, MACs from the ARP cache plus a
 targeted `SendARP` retry, and the type/system is inferred from the vendor prefix and the

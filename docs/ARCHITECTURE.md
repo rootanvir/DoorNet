@@ -154,8 +154,9 @@ branding are not reused).
   they survive tab switches.
 - Header tabs: icon + label pills for **Monitor** (the live dashboard), **Scanner**
   (local network discovery) and **Actions** (one-click controls and automations).
-- Scanner tab: scan action with live progress, then a table of type, name, IP, MAC, system,
-  vendor, open ports, latency and active/idle state.
+- Scanner tab: section pills (**Devices**, **Port scan**) switch between scanner types. Devices
+  carries the scan action, progress and a table of type, name, IP, MAC, system, vendor, open ports,
+  latency and active/idle state.
 - Status row: download, upload and session-total tiles. Large tabular numerals.
 - Map card: title row with an inline live/paused pill next to the legend, then the world map.
 - Main chart: 90 s dual-series area chart, auto-scaled, drawn natively (no chart library).
