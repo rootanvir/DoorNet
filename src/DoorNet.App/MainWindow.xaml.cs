@@ -28,6 +28,8 @@ public partial class MainWindow : Window
 
         menu.PlacementTarget = element;
         menu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+        menu.Padding = new Thickness(0);
+        menu.Width = element.ActualWidth;
         menu.IsOpen = true;
         e.Handled = true;
     }

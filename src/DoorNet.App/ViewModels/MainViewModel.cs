@@ -99,10 +99,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         RestartElevatedCommand = new RelayCommand(RestartElevated);
         _theme = ThemeManager.Current;
         ToggleThemeCommand = new RelayCommand(ToggleTheme);
-        AllowDownloadCommand = new RelayCommand<object?>(row => SetDirection(row, FirewallDirection.In, block: false));
-        BlockDownloadCommand = new RelayCommand<object?>(row => SetDirection(row, FirewallDirection.In, block: true));
-        AllowUploadCommand = new RelayCommand<object?>(row => SetDirection(row, FirewallDirection.Out, block: false));
-        BlockUploadCommand = new RelayCommand<object?>(row => SetDirection(row, FirewallDirection.Out, block: true));
+        ToggleDownloadCommand = new RelayCommand<object?>(row => ToggleDirection(row, FirewallDirection.In));
+        ToggleUploadCommand = new RelayCommand<object?>(row => ToggleDirection(row, FirewallDirection.Out));
         ToggleExpandCommand = new RelayCommand<object?>(ToggleExpand);
         ToggleTabsCommand = new RelayCommand<object?>(ToggleTabsSection);
         PreviousTabsCommand = new RelayCommand<object?>(row => ChangeTabPage(row, -1));
@@ -138,10 +136,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public RelayCommand ResetSessionCommand { get; }
     public RelayCommand RestartElevatedCommand { get; }
     public RelayCommand ToggleThemeCommand { get; }
-    public RelayCommand<object?> AllowDownloadCommand { get; }
-    public RelayCommand<object?> BlockDownloadCommand { get; }
-    public RelayCommand<object?> AllowUploadCommand { get; }
-    public RelayCommand<object?> BlockUploadCommand { get; }
+    public RelayCommand<object?> ToggleDownloadCommand { get; }
+    public RelayCommand<object?> ToggleUploadCommand { get; }
     public RelayCommand<object?> ToggleExpandCommand { get; }
     public RelayCommand<object?> ToggleTabsCommand { get; }
     public RelayCommand<object?> PreviousTabsCommand { get; }
@@ -772,7 +768,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _ = TickAsync();
     }
 
-    private void SetDirection(object? parameter, FirewallDirection direction, bool block)
+    private void ToggleDirection(object? parameter, FirewallDirection direction)
     {
         var path = parameter switch
         {
@@ -815,7 +811,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             return;
         }
 
-        var result = _firewall.SetBlocked(path, direction, block);
+        var blocked = _firewall.IsBlocked(path, direction);
+        var result = _firewall.SetBlocked(path, direction, !blocked);
 
         if (!result.Succeeded)
         {

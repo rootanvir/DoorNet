@@ -504,28 +504,47 @@
                                                             AutomationProperties.Name="Download access"
                                                             ToolTip="Change download (inbound) access">
                                                         <Button.ContextMenu>
-                                                            <ContextMenu>
-                                                                <MenuItem Style="{StaticResource AccessMenuItem}"
-                                                                          Background="{DynamicResource SuccessSoftBrush}"
-                                                                          Foreground="{DynamicResource DownloadBrush}"
-                                                                          Command="{Binding PlacementTarget.Tag.AllowDownloadCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                            <ContextMenu Padding="0">
+                                                                <MenuItem Command="{Binding PlacementTarget.Tag.ToggleDownloadCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                                           CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                                                                    <MenuItem.Style>
+                                                                        <Style TargetType="MenuItem" BasedOn="{StaticResource AccessMenuItem}">
+                                                                            <Setter Property="Background" Value="{DynamicResource DangerSoftBrush}" />
+                                                                            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding PlacementTarget.DataContext.InBlocked, RelativeSource={RelativeSource AncestorType=ContextMenu}}" Value="True">
+                                                                                    <Setter Property="Background" Value="{DynamicResource SuccessSoftBrush}" />
+                                                                                    <Setter Property="Foreground" Value="{DynamicResource DownloadBrush}" />
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </MenuItem.Style>
                                                                     <MenuItem.Header>
-                                                                        <StackPanel Orientation="Horizontal">
-                                                                            <TextBlock Text="&#xE73E;" FontFamily="{StaticResource GlyphFont}" FontSize="9" Margin="0,0,7,0" VerticalAlignment="Center" />
-                                                                            <TextBlock Text="Allow download" FontSize="11" VerticalAlignment="Center" />
-                                                                        </StackPanel>
-                                                                    </MenuItem.Header>
-                                                                </MenuItem>
-                                                                <MenuItem Style="{StaticResource AccessMenuItem}"
-                                                                          Background="{DynamicResource DangerSoftBrush}"
-                                                                          Foreground="{DynamicResource DangerBrush}"
-                                                                          Command="{Binding PlacementTarget.Tag.BlockDownloadCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                                                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
-                                                                    <MenuItem.Header>
-                                                                        <StackPanel Orientation="Horizontal">
-                                                                            <TextBlock Text="&#xE711;" FontFamily="{StaticResource GlyphFont}" FontSize="9" Margin="0,0,7,0" VerticalAlignment="Center" />
-                                                                            <TextBlock Text="Block download" FontSize="11" VerticalAlignment="Center" />
+                                                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                                            <TextBlock FontFamily="{StaticResource GlyphFont}" FontSize="9" Margin="0,0,6,0" VerticalAlignment="Center">
+                                                                                <TextBlock.Style>
+                                                                                    <Style TargetType="TextBlock">
+                                                                                        <Setter Property="Text" Value="&#xE711;" />
+                                                                                        <Style.Triggers>
+                                                                                            <DataTrigger Binding="{Binding PlacementTarget.DataContext.InBlocked, RelativeSource={RelativeSource AncestorType=ContextMenu}}" Value="True">
+                                                                                                <Setter Property="Text" Value="&#xE73E;" />
+                                                                                            </DataTrigger>
+                                                                                        </Style.Triggers>
+                                                                                    </Style>
+                                                                                </TextBlock.Style>
+                                                                            </TextBlock>
+                                                                            <TextBlock FontSize="11" VerticalAlignment="Center">
+                                                                                <TextBlock.Style>
+                                                                                    <Style TargetType="TextBlock">
+                                                                                        <Setter Property="Text" Value="Block" />
+                                                                                        <Style.Triggers>
+                                                                                            <DataTrigger Binding="{Binding PlacementTarget.DataContext.InBlocked, RelativeSource={RelativeSource AncestorType=ContextMenu}}" Value="True">
+                                                                                                <Setter Property="Text" Value="Allow" />
+                                                                                            </DataTrigger>
+                                                                                        </Style.Triggers>
+                                                                                    </Style>
+                                                                                </TextBlock.Style>
+                                                                            </TextBlock>
                                                                         </StackPanel>
                                                                     </MenuItem.Header>
                                                                 </MenuItem>
@@ -579,28 +598,47 @@
                                                             AutomationProperties.Name="Upload access"
                                                             ToolTip="Change upload (outbound) access">
                                                         <Button.ContextMenu>
-                                                            <ContextMenu>
-                                                                <MenuItem Style="{StaticResource AccessMenuItem}"
-                                                                          Background="{DynamicResource SuccessSoftBrush}"
-                                                                          Foreground="{DynamicResource DownloadBrush}"
-                                                                          Command="{Binding PlacementTarget.Tag.AllowUploadCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
+                                                            <ContextMenu Padding="0">
+                                                                <MenuItem Command="{Binding PlacementTarget.Tag.ToggleUploadCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                                           CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                                                                    <MenuItem.Style>
+                                                                        <Style TargetType="MenuItem" BasedOn="{StaticResource AccessMenuItem}">
+                                                                            <Setter Property="Background" Value="{DynamicResource DangerSoftBrush}" />
+                                                                            <Setter Property="Foreground" Value="{DynamicResource DangerBrush}" />
+                                                                            <Style.Triggers>
+                                                                                <DataTrigger Binding="{Binding PlacementTarget.DataContext.OutBlocked, RelativeSource={RelativeSource AncestorType=ContextMenu}}" Value="True">
+                                                                                    <Setter Property="Background" Value="{DynamicResource SuccessSoftBrush}" />
+                                                                                    <Setter Property="Foreground" Value="{DynamicResource DownloadBrush}" />
+                                                                                </DataTrigger>
+                                                                            </Style.Triggers>
+                                                                        </Style>
+                                                                    </MenuItem.Style>
                                                                     <MenuItem.Header>
-                                                                        <StackPanel Orientation="Horizontal">
-                                                                            <TextBlock Text="&#xE73E;" FontFamily="{StaticResource GlyphFont}" FontSize="9" Margin="0,0,7,0" VerticalAlignment="Center" />
-                                                                            <TextBlock Text="Allow upload" FontSize="11" VerticalAlignment="Center" />
-                                                                        </StackPanel>
-                                                                    </MenuItem.Header>
-                                                                </MenuItem>
-                                                                <MenuItem Style="{StaticResource AccessMenuItem}"
-                                                                          Background="{DynamicResource DangerSoftBrush}"
-                                                                          Foreground="{DynamicResource DangerBrush}"
-                                                                          Command="{Binding PlacementTarget.Tag.BlockUploadCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                                                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
-                                                                    <MenuItem.Header>
-                                                                        <StackPanel Orientation="Horizontal">
-                                                                            <TextBlock Text="&#xE711;" FontFamily="{StaticResource GlyphFont}" FontSize="9" Margin="0,0,7,0" VerticalAlignment="Center" />
-                                                                            <TextBlock Text="Block upload" FontSize="11" VerticalAlignment="Center" />
+                                                                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                                                                            <TextBlock FontFamily="{StaticResource GlyphFont}" FontSize="9" Margin="0,0,6,0" VerticalAlignment="Center">
+                                                                                <TextBlock.Style>
+                                                                                    <Style TargetType="TextBlock">
+                                                                                        <Setter Property="Text" Value="&#xE711;" />
+                                                                                        <Style.Triggers>
+                                                                                            <DataTrigger Binding="{Binding PlacementTarget.DataContext.OutBlocked, RelativeSource={RelativeSource AncestorType=ContextMenu}}" Value="True">
+                                                                                                <Setter Property="Text" Value="&#xE73E;" />
+                                                                                            </DataTrigger>
+                                                                                        </Style.Triggers>
+                                                                                    </Style>
+                                                                                </TextBlock.Style>
+                                                                            </TextBlock>
+                                                                            <TextBlock FontSize="11" VerticalAlignment="Center">
+                                                                                <TextBlock.Style>
+                                                                                    <Style TargetType="TextBlock">
+                                                                                        <Setter Property="Text" Value="Block" />
+                                                                                        <Style.Triggers>
+                                                                                            <DataTrigger Binding="{Binding PlacementTarget.DataContext.OutBlocked, RelativeSource={RelativeSource AncestorType=ContextMenu}}" Value="True">
+                                                                                                <Setter Property="Text" Value="Allow" />
+                                                                                            </DataTrigger>
+                                                                                        </Style.Triggers>
+                                                                                    </Style>
+                                                                                </TextBlock.Style>
+                                                                            </TextBlock>
                                                                         </StackPanel>
                                                                     </MenuItem.Header>
                                                                 </MenuItem>
