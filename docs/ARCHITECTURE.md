@@ -149,9 +149,10 @@ Dark, dense, instrument-panel feel — closer to Task Manager's Performance tab 
 consumer dashboard. No GlassWire visual language (its palette, iconography, layout and
 branding are not reused).
 
-- Header: product mark, adapter summary, a disc-style firewall master switch and the theme
-  toggle pinned to the far right so they survive tab switches; the stretch between them is
-  reserved for the navigation tabs.
+- Header: product mark on the left, firewall master switch and theme toggle pinned right so
+  they survive tab switches.
+- Left rail: icon + label tabs for **Monitor** (the live dashboard) and **Actions** (a home for
+  future one-click controls and automations).
 - Status row: download, upload and session-total tiles. Large tabular numerals.
 - Map card: title row with an inline live/paused pill next to the legend, then the world map.
 - Main chart: 90 s dual-series area chart, auto-scaled, drawn natively (no chart library).

@@ -47,14 +47,12 @@
                                    HorizontalAlignment="Center"
                                    VerticalAlignment="Center" />
                     </Border>
-                    <StackPanel Margin="11,0,0,0" VerticalAlignment="Center">
-                        <TextBlock Text="DoorNet" FontSize="14" FontWeight="SemiBold" Foreground="{DynamicResource TextPrimaryBrush}" />
-                        <TextBlock Text="{Binding AdapterSummary}"
-                                   Style="{StaticResource Caption}"
-                                   MaxWidth="340"
-                                   TextTrimming="CharacterEllipsis"
-                                   Margin="0,1,0,0" />
-                    </StackPanel>
+                    <TextBlock Text="DoorNet"
+                               Margin="11,0,0,0"
+                               FontSize="14"
+                               FontWeight="SemiBold"
+                               VerticalAlignment="Center"
+                               Foreground="{DynamicResource TextPrimaryBrush}" />
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
@@ -77,8 +75,14 @@
             </Grid>
         </Border>
 
-        <!-- Content -->
-        <Grid Grid.Row="1" Margin="20,16,20,14">
+        <!-- Navigation -->
+        <TabControl Grid.Row="1"
+                    Style="{StaticResource NavTabControl}"
+                    TabStripPlacement="Left">
+            <TabItem Header="Monitor"
+                     Tag="&#xE9D9;"
+                     Style="{StaticResource NavTabItem}">
+        <Grid Margin="20,16,20,14">
             <Grid.RowDefinitions>
                 <RowDefinition Height="Auto" />
                 <RowDefinition Height="*" MinHeight="240" />
@@ -1005,6 +1009,46 @@
                 </Border>
             </Grid>
         </Grid>
+            </TabItem>
+
+            <TabItem Header="Actions"
+                     Tag="&#xE945;"
+                     Style="{StaticResource NavTabItem}">
+                <Grid Margin="20,16,20,14">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto" />
+                        <RowDefinition Height="*" />
+                    </Grid.RowDefinitions>
+
+                    <StackPanel>
+                        <TextBlock Text="Actions" Style="{StaticResource SectionTitle}" FontSize="17" />
+                        <TextBlock Text="One-click controls and automations will be built here."
+                                   Style="{StaticResource Caption}"
+                                   Margin="0,4,0,0" />
+                    </StackPanel>
+
+                    <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,14,0,0">
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Text="&#xE945;"
+                                       FontFamily="{StaticResource GlyphFont}"
+                                       FontSize="30"
+                                       HorizontalAlignment="Center"
+                                       Foreground="{DynamicResource TextMutedBrush}" />
+                            <TextBlock Text="Nothing here yet"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       HorizontalAlignment="Center"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       Margin="0,12,0,0" />
+                            <TextBlock Text="New actions will appear here as they are added."
+                                       Style="{StaticResource Caption}"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,4,0,0" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
+            </TabItem>
+        </TabControl>
 
         <!-- Footer -->
         <Border Grid.Row="2"
