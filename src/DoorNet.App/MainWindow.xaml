@@ -505,12 +505,30 @@
                                                             ToolTip="Change download (inbound) access">
                                                         <Button.ContextMenu>
                                                             <ContextMenu>
-                                                                <MenuItem Header="Allow download"
+                                                                <MenuItem Style="{StaticResource AccessMenuItem}"
+                                                                          Background="{DynamicResource SuccessSoftBrush}"
+                                                                          Foreground="{DynamicResource DownloadBrush}"
                                                                           Command="{Binding PlacementTarget.Tag.AllowDownloadCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                                                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
-                                                                <MenuItem Header="Block download"
+                                                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                                                                    <MenuItem.Header>
+                                                                        <StackPanel Orientation="Horizontal">
+                                                                            <TextBlock Text="&#xE73E;" FontFamily="{StaticResource GlyphFont}" FontSize="9" Margin="0,0,7,0" VerticalAlignment="Center" />
+                                                                            <TextBlock Text="Allow download" FontSize="11" VerticalAlignment="Center" />
+                                                                        </StackPanel>
+                                                                    </MenuItem.Header>
+                                                                </MenuItem>
+                                                                <MenuItem Style="{StaticResource AccessMenuItem}"
+                                                                          Background="{DynamicResource DangerSoftBrush}"
+                                                                          Foreground="{DynamicResource DangerBrush}"
                                                                           Command="{Binding PlacementTarget.Tag.BlockDownloadCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                                                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                                                                    <MenuItem.Header>
+                                                                        <StackPanel Orientation="Horizontal">
+                                                                            <TextBlock Text="&#xE711;" FontFamily="{StaticResource GlyphFont}" FontSize="9" Margin="0,0,7,0" VerticalAlignment="Center" />
+                                                                            <TextBlock Text="Block download" FontSize="11" VerticalAlignment="Center" />
+                                                                        </StackPanel>
+                                                                    </MenuItem.Header>
+                                                                </MenuItem>
                                                             </ContextMenu>
                                                         </Button.ContextMenu>
                                                         <Button.Style>
@@ -562,12 +580,30 @@
                                                             ToolTip="Change upload (outbound) access">
                                                         <Button.ContextMenu>
                                                             <ContextMenu>
-                                                                <MenuItem Header="Allow upload"
+                                                                <MenuItem Style="{StaticResource AccessMenuItem}"
+                                                                          Background="{DynamicResource SuccessSoftBrush}"
+                                                                          Foreground="{DynamicResource DownloadBrush}"
                                                                           Command="{Binding PlacementTarget.Tag.AllowUploadCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                                                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
-                                                                <MenuItem Header="Block upload"
+                                                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                                                                    <MenuItem.Header>
+                                                                        <StackPanel Orientation="Horizontal">
+                                                                            <TextBlock Text="&#xE73E;" FontFamily="{StaticResource GlyphFont}" FontSize="9" Margin="0,0,7,0" VerticalAlignment="Center" />
+                                                                            <TextBlock Text="Allow upload" FontSize="11" VerticalAlignment="Center" />
+                                                                        </StackPanel>
+                                                                    </MenuItem.Header>
+                                                                </MenuItem>
+                                                                <MenuItem Style="{StaticResource AccessMenuItem}"
+                                                                          Background="{DynamicResource DangerSoftBrush}"
+                                                                          Foreground="{DynamicResource DangerBrush}"
                                                                           Command="{Binding PlacementTarget.Tag.BlockUploadCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
-                                                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                                                          CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
+                                                                    <MenuItem.Header>
+                                                                        <StackPanel Orientation="Horizontal">
+                                                                            <TextBlock Text="&#xE711;" FontFamily="{StaticResource GlyphFont}" FontSize="9" Margin="0,0,7,0" VerticalAlignment="Center" />
+                                                                            <TextBlock Text="Block upload" FontSize="11" VerticalAlignment="Center" />
+                                                                        </StackPanel>
+                                                                    </MenuItem.Header>
+                                                                </MenuItem>
                                                             </ContextMenu>
                                                         </Button.ContextMenu>
                                                         <Button.Style>
