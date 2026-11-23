@@ -1013,35 +1013,201 @@
                   Visibility="{Binding IsChecked, ElementName=ScannerTab, Converter={StaticResource BoolToVis}}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
                     <RowDefinition Height="*" />
                 </Grid.RowDefinitions>
 
-                <StackPanel>
-                    <TextBlock Text="Scanner" Style="{StaticResource SectionTitle}" FontSize="17" />
-                    <TextBlock Text="Network discovery and port scans will be built here."
-                               Style="{StaticResource Caption}"
-                               Margin="0,4,0,0" />
-                </StackPanel>
-
-                <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,14,0,0">
-                    <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <TextBlock Text="&#xE721;"
-                                   FontFamily="{StaticResource GlyphFont}"
-                                   FontSize="30"
-                                   HorizontalAlignment="Center"
-                                   Foreground="{DynamicResource TextMutedBrush}" />
-                        <TextBlock Text="Nothing here yet"
-                                   FontSize="13"
-                                   FontWeight="SemiBold"
-                                   HorizontalAlignment="Center"
-                                   Foreground="{DynamicResource TextPrimaryBrush}"
-                                   Margin="0,12,0,0" />
-                        <TextBlock Text="Scan results will appear here once scanning is wired up."
-                                   Style="{StaticResource Caption}"
-                                   HorizontalAlignment="Center"
-                                   Margin="0,4,0,0" />
+                <Grid>
+                    <StackPanel>
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="Scanner" Style="{StaticResource SectionTitle}" FontSize="17" />
+                            <Border Background="{DynamicResource SubtlePillBrush}"
+                                    CornerRadius="5"
+                                    Padding="6,2"
+                                    Margin="9,0,0,0"
+                                    VerticalAlignment="Center"
+                                    Visibility="{Binding HasScanResults, Converter={StaticResource BoolToVis}}">
+                                <TextBlock Text="{Binding ScannerSummaryText}"
+                                           FontSize="10"
+                                           Foreground="{DynamicResource TextMutedBrush}" />
+                            </Border>
+                        </StackPanel>
+                        <TextBlock Style="{StaticResource Caption}" Margin="0,4,0,0">
+                            <Run Text="Local network" />
+                            <Run Text="{Binding ScannerSubnetText, Mode=OneWay}" />
+                            <Run Text=" · " />
+                            <Run Text="{Binding ScannerStatusText, Mode=OneWay}" />
+                        </TextBlock>
                     </StackPanel>
+
+                    <Button Content="{Binding ScanButtonText}"
+                            Command="{Binding ScanNetworkCommand}"
+                            IsEnabled="{Binding ScanButtonEnabled}"
+                            Style="{StaticResource GhostButton}"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Center" />
+                </Grid>
+
+                <Border Grid.Row="1"
+                        Margin="0,12,9,0"
+                        Padding="0,0,0,6"
+                        BorderBrush="{DynamicResource LineSoftBrush}"
+                        BorderThickness="0,0,0,1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="116" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="112" />
+                            <ColumnDefinition Width="132" />
+                            <ColumnDefinition Width="106" />
+                            <ColumnDefinition Width="128" />
+                            <ColumnDefinition Width="112" />
+                            <ColumnDefinition Width="86" />
+                            <ColumnDefinition Width="84" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="TYPE" Style="{StaticResource TableHeader}" />
+                        <TextBlock Grid.Column="1" Text="NAME" Style="{StaticResource TableHeader}" Margin="0,0,10,0" />
+                        <TextBlock Grid.Column="2" Text="IP" Style="{StaticResource TableHeader}" Margin="0,0,10,0" />
+                        <TextBlock Grid.Column="3" Text="MAC" Style="{StaticResource TableHeader}" Margin="0,0,10,0" />
+                        <TextBlock Grid.Column="4" Text="SYSTEM" Style="{StaticResource TableHeader}" Margin="0,0,10,0" />
+                        <TextBlock Grid.Column="5" Text="VENDOR" Style="{StaticResource TableHeader}" Margin="0,0,10,0" />
+                        <TextBlock Grid.Column="6" Text="PORTS" Style="{StaticResource TableHeader}" Margin="0,0,10,0" />
+                        <TextBlock Grid.Column="7" Text="LATENCY" Style="{StaticResource TableHeader}" Margin="0,0,10,0" />
+                        <TextBlock Grid.Column="8" Text="STATE" Style="{StaticResource TableHeader}" />
+                    </Grid>
                 </Border>
+
+                <Grid Grid.Row="2">
+                    <ScrollViewer VerticalScrollBarVisibility="Auto">
+                        <ItemsControl ItemsSource="{Binding ScanDevices}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Padding="0,8"
+                                            BorderBrush="{DynamicResource LineSoftBrush}"
+                                            BorderThickness="0,0,0,1"
+                                            ToolTip="{Binding Tooltip}">
+                                        <Grid>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="116" />
+                                                <ColumnDefinition Width="*" />
+                                                <ColumnDefinition Width="112" />
+                                                <ColumnDefinition Width="132" />
+                                                <ColumnDefinition Width="106" />
+                                                <ColumnDefinition Width="128" />
+                                                <ColumnDefinition Width="112" />
+                                                <ColumnDefinition Width="86" />
+                                                <ColumnDefinition Width="84" />
+                                            </Grid.ColumnDefinitions>
+
+                                            <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <TextBlock Text="{Binding Glyph}"
+                                                           FontFamily="{StaticResource GlyphFont}"
+                                                           FontSize="13"
+                                                           Margin="2,0,8,0"
+                                                           VerticalAlignment="Center"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}" />
+                                                <TextBlock Text="{Binding Kind}"
+                                                           FontSize="11.5"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                                           VerticalAlignment="Center" />
+                                            </StackPanel>
+
+                                            <TextBlock Grid.Column="1"
+                                                       Text="{Binding Name}"
+                                                       FontSize="12"
+                                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,10,0" />
+
+                                            <TextBlock Grid.Column="2"
+                                                       Text="{Binding Ip}"
+                                                       FontSize="11"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,10,0" />
+
+                                            <TextBlock Grid.Column="3"
+                                                       Text="{Binding Mac}"
+                                                       FontSize="10.5"
+                                                       Foreground="{DynamicResource TextMutedBrush}"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,10,0" />
+
+                                            <TextBlock Grid.Column="4"
+                                                       Text="{Binding System}"
+                                                       FontSize="11"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,10,0" />
+
+                                            <TextBlock Grid.Column="5"
+                                                       Text="{Binding Vendor}"
+                                                       FontSize="11"
+                                                       Foreground="{DynamicResource TextSecondaryBrush}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,10,0" />
+
+                                            <TextBlock Grid.Column="6"
+                                                       Text="{Binding Ports}"
+                                                       FontSize="10.5"
+                                                       Foreground="{DynamicResource TextMutedBrush}"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,10,0" />
+
+                                            <TextBlock Grid.Column="7"
+                                                       Text="{Binding Latency}"
+                                                       FontSize="10.5"
+                                                       Foreground="{DynamicResource TextMutedBrush}"
+                                                       VerticalAlignment="Center"
+                                                       Margin="0,0,10,0" />
+
+                                            <StackPanel Grid.Column="8" Orientation="Horizontal" VerticalAlignment="Center">
+                                                <Ellipse Width="5" Height="5" Fill="{Binding StateBrush}" Margin="0,0,6,0" VerticalAlignment="Center" />
+                                                <TextBlock Text="{Binding StateText}"
+                                                           FontSize="10.5"
+                                                           Foreground="{DynamicResource TextMutedBrush}"
+                                                           VerticalAlignment="Center" />
+                                            </StackPanel>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <Border>
+                        <Border.Style>
+                            <Style TargetType="Border" BasedOn="{StaticResource Card}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding HasScanResults}" Value="True">
+                                        <Setter Property="Visibility" Value="Collapsed" />
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                        <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <TextBlock Text="&#xE721;"
+                                       FontFamily="{StaticResource GlyphFont}"
+                                       FontSize="30"
+                                       HorizontalAlignment="Center"
+                                       Foreground="{DynamicResource TextMutedBrush}" />
+                            <TextBlock Text="No scan yet"
+                                       FontSize="13"
+                                       FontWeight="SemiBold"
+                                       HorizontalAlignment="Center"
+                                       Foreground="{DynamicResource TextPrimaryBrush}"
+                                       Margin="0,12,0,0" />
+                            <TextBlock Text="Run a scan to list this network's devices, addresses and open ports."
+                                       Style="{StaticResource Caption}"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,4,0,0" />
+                        </StackPanel>
+                    </Border>
+                </Grid>
             </Grid>
 
             <Grid Margin="20,16,20,14"

@@ -35,6 +35,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly UsageTotals _usageTotals = new();
     private readonly HashSet<string> _expanded = new(StringComparer.Ordinal);
     private readonly GeoLocator _geo = new();
+    private readonly NetworkScanner _scanner = new();
     private readonly Dictionary<string, GeoPoint> _remoteGeo = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _geoPending = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _geoFailed = new(StringComparer.OrdinalIgnoreCase);
@@ -73,6 +74,10 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private int _connectionCount;
     private int _appCount;
     private IReadOnlyList<ThroughputPoint> _chartPoints = Array.Empty<ThroughputPoint>();
+    private bool _isScanning;
+    private string _scannerStatus = "Not scanned yet — run a scan to list the devices on this network.";
+    private string _scannerSubnet = "—";
+    private string _scannerSummary = string.Empty;
 
     public MainViewModel()
         : this(
@@ -106,6 +111,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         PreviousTabsCommand = new RelayCommand<object?>(row => ChangeTabPage(row, -1));
         NextTabsCommand = new RelayCommand<object?>(row => ChangeTabPage(row, 1));
         ToggleFirewallCommand = new RelayCommand(ToggleFirewall);
+        ScanNetworkCommand = new RelayCommand(() => _ = ScanNetworkAsync());
 
         CanOfferElevation = !Environment.IsPrivilegedProcess;
 
@@ -131,6 +137,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
     public ObservableCollection<ConnectionGroupRow> Connections { get; } = [];
     public ObservableCollection<AppRow> Apps { get; } = [];
+    public ObservableCollection<ScannerRow> ScanDevices { get; } = [];
 
     public RelayCommand ToggleCaptureCommand { get; }
     public RelayCommand ResetSessionCommand { get; }
@@ -143,6 +150,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public RelayCommand<object?> PreviousTabsCommand { get; }
     public RelayCommand<object?> NextTabsCommand { get; }
     public RelayCommand ToggleFirewallCommand { get; }
+    public RelayCommand ScanNetworkCommand { get; }
 
     /// <summary>Master switch for every DoorNet firewall rule.</summary>
     public bool IsFirewallEnabled => _firewall.IsEnabled;
@@ -175,6 +183,26 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public string AdapterSummary { get => _adapterSummary; private set => SetProperty(ref _adapterSummary, value); }
     public string StatusText { get => _statusText; private set => SetProperty(ref _statusText, value); }
     public string CaptureButtonLabel { get => _captureButtonLabel; private set => SetProperty(ref _captureButtonLabel, value); }
+
+    public bool IsScanning
+    {
+        get => _isScanning;
+        private set
+        {
+            if (!SetProperty(ref _isScanning, value))
+                return;
+
+            OnPropertyChanged(nameof(ScanButtonText));
+            OnPropertyChanged(nameof(ScanButtonEnabled));
+        }
+    }
+
+    public string ScanButtonText => IsScanning ? "Scanning…" : "Scan network";
+    public bool ScanButtonEnabled => !IsScanning;
+    public string ScannerStatusText { get => _scannerStatus; private set => SetProperty(ref _scannerStatus, value); }
+    public string ScannerSubnetText { get => _scannerSubnet; private set => SetProperty(ref _scannerSubnet, value); }
+    public string ScannerSummaryText { get => _scannerSummary; private set => SetProperty(ref _scannerSummary, value); }
+    public bool HasScanResults => ScanDevices.Count > 0;
     public string ElevationNote { get; }
     public string PerAppNote { get; }
 
@@ -890,6 +918,59 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             // UAC was dismissed or there is no interactive shell: stay running unelevated.
         }
     }
+
+    private async Task ScanNetworkAsync()
+    {
+        if (IsScanning)
+            return;
+
+        IsScanning = true;
+        ScanDevices.Clear();
+        OnPropertyChanged(nameof(HasScanResults));
+        ScannerSummaryText = string.Empty;
+        ScannerStatusText = "Starting scan…";
+
+        try
+        {
+            var progress = new Progress<ScanProgress>(report => ScannerStatusText = report.Message);
+            var result = await Task.Run(() => _scanner.ScanAsync(progress)).ConfigureAwait(true);
+
+            ScannerSubnetText = result.Subnet;
+            foreach (var device in result.Devices)
+                ScanDevices.Add(ToScannerRow(device));
+
+            ScannerSummaryText = $"{result.Devices.Count} devices · {result.Devices.Count(d => d.IsActive)} active";
+            ScannerStatusText = $"Last scan {DateTime.Now:HH:mm:ss} · {result.Duration.TotalSeconds:0.0} s";
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or System.Net.NetworkInformation.NetworkInformationException)
+        {
+            ScannerStatusText = ex.Message;
+        }
+        catch (Exception ex)
+        {
+            ScannerStatusText = $"Scan failed: {ex.Message}";
+        }
+        finally
+        {
+            IsScanning = false;
+            OnPropertyChanged(nameof(HasScanResults));
+        }
+    }
+
+    private static ScannerRow ToScannerRow(LanDevice device) => new(
+        device.KindText,
+        ScannerRow.GlyphFor(device.Kind),
+        device.Name,
+        device.Address,
+        string.IsNullOrEmpty(device.Mac) ? "—" : device.Mac,
+        device.System,
+        device.VendorText,
+        device.PortsText,
+        device.LatencyText,
+        device.IsActive ? "Active" : "Idle",
+        device.IsActive ? ScannerRow.ActiveBrush : ScannerRow.IdleBrush,
+        device.IsActive,
+        $"{device.KindText} · {device.System}\nIP {device.Address}\nMAC {(string.IsNullOrEmpty(device.Mac) ? "unknown" : device.Mac)}\nVendor {device.VendorText}\nOpen ports: {device.PortsText}\n{(device.IsActive ? $"Responding · {device.LatencyText}" : "Not responding (MAC known)")}");
 
     private void ResetSession()
     {

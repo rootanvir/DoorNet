@@ -1,6 +1,49 @@
 using System.Windows.Media;
+using DoorNet.Core.Scanning;
 
 namespace DoorNet.App.ViewModels;
+
+/// <summary>One host in the scanner table.</summary>
+public sealed record ScannerRow(
+    string Kind,
+    string Glyph,
+    string Name,
+    string Ip,
+    string Mac,
+    string System,
+    string Vendor,
+    string Ports,
+    string Latency,
+    string StateText,
+    Brush StateBrush,
+    bool IsActive,
+    string Tooltip)
+{
+    public static readonly Brush ActiveBrush = Frozen("#35E08E");
+    public static readonly Brush IdleBrush = Frozen("#5A6C7E");
+
+    public static string GlyphFor(DeviceKind kind) => kind switch
+    {
+        DeviceKind.ThisDevice or DeviceKind.Computer => "\uE839",
+        DeviceKind.Router => "\uE968",
+        DeviceKind.Phone => "\uE8EA",
+        DeviceKind.Tablet => "\uE70A",
+        DeviceKind.Printer => "\uE749",
+        DeviceKind.Tv => "\uE7F4",
+        DeviceKind.Speaker => "\uE8D6",
+        DeviceKind.Camera => "\uE722",
+        DeviceKind.Console => "\uE7FC",
+        DeviceKind.InternetOfThings => "\uE945",
+        _ => "\uE897"
+    };
+
+    private static Brush Frozen(string hex)
+    {
+        var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
+        brush.Freeze();
+        return brush;
+    }
+}
 
 /// <summary>A flat row for the connection grid.</summary>
 public sealed record ConnectionRow(

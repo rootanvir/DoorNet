@@ -42,6 +42,7 @@ Packet capture / DPI, VPN functionality, cross-platform, kernel drivers.
 |---|---|---|---|
 | Total bytes up/down | `NetworkInterface.GetIPStatistics()` | No | Sum of IPv4+IPv6 counters on `Up`, non-loopback, non-tunnel adapters |
 | Connection list | `GetExtendedTcpTable` / `GetExtendedUdpTable` (`iphlpapi.dll`) | No | Returns owning PID per row, v4 and v6 |
+| LAN scan | ICMP echo, `GetIpNetTable` neighbour cache, `SendARP`, reverse DNS + NetBIOS, 17-port TCP probe | No | Runs on demand; the whole sweep is one background task |
 | PID → process | `Process.GetProcessById` | No | `MainModule.FileName` can throw for protected processes; degrade to name |
 | **Per-app bytes** | **ETW** `Microsoft-Windows-Kernel-Network` | **Yes** | Real-time session, per-event PID + byte count. This is what GlassWire does |
 | Interface metadata | `NetworkInterface`, `NetworkInterfaceType` | No | Friendly adapter name, link speed, status |
@@ -152,7 +153,9 @@ branding are not reused).
 - Header: product mark on the left, firewall master switch and theme toggle pinned right so
   they survive tab switches.
 - Header tabs: icon + label pills for **Monitor** (the live dashboard), **Scanner**
-  (network discovery and port scans) and **Actions** (one-click controls and automations).
+  (local network discovery) and **Actions** (one-click controls and automations).
+- Scanner tab: scan action with live progress, then a table of type, name, IP, MAC, system,
+  vendor, open ports, latency and active/idle state.
 - Status row: download, upload and session-total tiles. Large tabular numerals.
 - Map card: title row with an inline live/paused pill next to the legend, then the world map.
 - Main chart: 90 s dual-series area chart, auto-scaled, drawn natively (no chart library).
