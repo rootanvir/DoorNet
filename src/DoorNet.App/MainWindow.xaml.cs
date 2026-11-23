@@ -29,13 +29,17 @@ public partial class MainWindow : Window
 
         menu.PlacementTarget = element;
         menu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
-        menu.HorizontalOffset = 0;
-        menu.VerticalOffset = 4;
+
+        // The popup padding reserves 6 px for the item's shadow; offset it so the visible
+        // box lines up with the pill and keeps a 4 px gap below it.
+        const double shadowPadding = 6;
+        menu.HorizontalOffset = -shadowPadding;
+        menu.VerticalOffset = 4 - shadowPadding;
         menu.Padding = new Thickness(0);
         menu.Background = Brushes.Transparent;
         menu.BorderThickness = new Thickness(0);
-        menu.Width = element.ActualWidth;
-        menu.MinWidth = element.ActualWidth;
+        menu.Width = element.ActualWidth + (shadowPadding * 2);
+        menu.MinWidth = menu.Width;
         menu.IsOpen = true;
         e.Handled = true;
     }
