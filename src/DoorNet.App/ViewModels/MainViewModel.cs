@@ -23,6 +23,7 @@ namespace DoorNet.App.ViewModels;
 public sealed class MainViewModel : ObservableObject, IDisposable
 {
     private const int HistoryCapacity = 90;
+    private const int TabPageSize = 10;
     private const int MaxConnectionRows = 400;
 
     private readonly IThroughputSource _throughputSource;
@@ -41,6 +42,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private IReadOnlyList<GeoMarker> _mapMarkers = Array.Empty<GeoMarker>();
     private IReadOnlyDictionary<string, BrowserTabInfo> _browserTabs =
         new Dictionary<string, BrowserTabInfo>(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _tabsExpanded = new(StringComparer.Ordinal);
+    private readonly Dictionary<string, int> _tabPages = new(StringComparer.Ordinal);
     private readonly CancellationTokenSource _tabProbeCts = new();
     private readonly DispatcherTimer _timer;
 
@@ -99,6 +102,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         ToggleInboundCommand = new RelayCommand<object?>(row => ToggleDirection(row, FirewallDirection.In));
         ToggleOutboundCommand = new RelayCommand<object?>(row => ToggleDirection(row, FirewallDirection.Out));
         ToggleExpandCommand = new RelayCommand<object?>(ToggleExpand);
+        ToggleTabsCommand = new RelayCommand<object?>(ToggleTabsSection);
+        PreviousTabsCommand = new RelayCommand<object?>(row => ChangeTabPage(row, -1));
+        NextTabsCommand = new RelayCommand<object?>(row => ChangeTabPage(row, 1));
         ToggleFirewallCommand = new RelayCommand(ToggleFirewall);
 
         CanOfferElevation = !Environment.IsPrivilegedProcess;
@@ -133,6 +139,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public RelayCommand<object?> ToggleInboundCommand { get; }
     public RelayCommand<object?> ToggleOutboundCommand { get; }
     public RelayCommand<object?> ToggleExpandCommand { get; }
+    public RelayCommand<object?> ToggleTabsCommand { get; }
+    public RelayCommand<object?> PreviousTabsCommand { get; }
+    public RelayCommand<object?> NextTabsCommand { get; }
     public RelayCommand ToggleFirewallCommand { get; }
 
     /// <summary>Master switch for every DoorNet firewall rule.</summary>
@@ -614,6 +623,17 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         if (tabs is { Count: > 0 })
             detail += $" \u00B7 {tabs.Count} tabs";
 
+        var allTabs = tabs?.Titles ?? Array.Empty<string>();
+        var tabsKey = "tabs|" + summary.Key;
+        var tabsExpanded = _tabsExpanded.Contains(tabsKey);
+        var page = Pager.ClampPage(
+            _tabPages.TryGetValue(tabsKey, out var storedPage) ? storedPage : 0,
+            allTabs.Count,
+            TabPageSize);
+        var visibleTabs = Pager.Slice(allTabs, page, TabPageSize);
+        var tabsPageText = Pager.RangeText(page, allTabs.Count, TabPageSize);
+        var pageCount = Pager.PageCount(allTabs.Count, TabPageSize);
+
         var processes = summary.Apps
             .OrderByDescending(a => a.BytesReceived + a.BytesSent)
             .Select(a =>
@@ -652,7 +672,13 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             _firewall.IsBlocked(summary.Path, FirewallDirection.Out),
             expanded,
             processes,
-            tabs?.Titles ?? Array.Empty<string>(),
+            allTabs,
+            tabsExpanded,
+            visibleTabs,
+            tabsPageText,
+            pageCount > 1,
+            page > 0,
+            page < pageCount - 1,
             summary.Path ?? $"PID {summary.Apps[0].ProcessId}");
     }
 
@@ -711,6 +737,34 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         if (!_expanded.Add(key))
             _expanded.Remove(key);
 
+        _ = TickAsync();
+    }
+
+    private void ToggleTabsSection(object? parameter)
+    {
+        if (parameter is not AppRow row)
+            return;
+
+        var key = "tabs|" + row.GroupKey;
+
+        if (!_tabsExpanded.Add(key))
+            _tabsExpanded.Remove(key);
+
+        _ = TickAsync();
+    }
+
+    private void ChangeTabPage(object? parameter, int delta)
+    {
+        if (parameter is not AppRow row || row.Tabs.Count == 0)
+            return;
+
+        var key = "tabs|" + row.GroupKey;
+        var page = Pager.ClampPage(
+            (_tabPages.TryGetValue(key, out var stored) ? stored : 0) + delta,
+            row.Tabs.Count,
+            TabPageSize);
+
+        _tabPages[key] = page;
         _ = TickAsync();
     }
 

@@ -661,32 +661,93 @@
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>
 
-                                                <StackPanel Visibility="{Binding HasTabs, Converter={StaticResource BoolToVis}}"
-                                                            Margin="58,6,0,2">
-                                                    <TextBlock Text="{Binding TabsHeader}"
-                                                               FontSize="9.5"
-                                                               FontWeight="SemiBold"
-                                                               Foreground="{DynamicResource TextMutedBrush}"
-                                                               Margin="0,0,0,3" />
-                                                    <ItemsControl ItemsSource="{Binding Tabs}">
-                                                        <ItemsControl.ItemTemplate>
-                                                            <DataTemplate>
-                                                                <StackPanel Orientation="Horizontal" Margin="0,1">
-                                                                    <TextBlock Text="&#xE774;"
-                                                                               FontFamily="{StaticResource GlyphFont}"
-                                                                               FontSize="9"
-                                                                               Foreground="{DynamicResource TextMutedBrush}"
-                                                                               Margin="0,0,6,0"
-                                                                               VerticalAlignment="Center" />
-                                                                    <TextBlock Text="{Binding}"
-                                                                               FontSize="10.5"
-                                                                               Foreground="{DynamicResource TextSecondaryBrush}"
-                                                                               TextTrimming="CharacterEllipsis"
-                                                                               VerticalAlignment="Center" />
-                                                                </StackPanel>
-                                                            </DataTemplate>
-                                                        </ItemsControl.ItemTemplate>
-                                                    </ItemsControl>
+                                                <StackPanel Visibility="{Binding ShowTabsSection, Converter={StaticResource BoolToVis}}"
+                                                            Margin="58,5,0,2">
+                                                    <Button Command="{Binding DataContext.ToggleTabsCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}"
+                                                            HorizontalAlignment="Left"
+                                                            AutomationProperties.Name="Toggle tabs"
+                                                            Style="{StaticResource TabsToggleButton}">
+                                                        <StackPanel Orientation="Horizontal">
+                                                            <TextBlock FontFamily="{StaticResource GlyphFont}"
+                                                                       FontSize="9"
+                                                                       Margin="0,0,6,0"
+                                                                       VerticalAlignment="Center">
+                                                                <TextBlock.Style>
+                                                                    <Style TargetType="TextBlock">
+                                                                        <Setter Property="Text" Value="&#xE76C;" />
+                                                                        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+                                                                        <Style.Triggers>
+                                                                            <DataTrigger Binding="{Binding TabsExpanded}" Value="True">
+                                                                                <Setter Property="Text" Value="&#xE70D;" />
+                                                                            </DataTrigger>
+                                                                        </Style.Triggers>
+                                                                    </Style>
+                                                                </TextBlock.Style>
+                                                            </TextBlock>
+                                                            <TextBlock Text="{Binding TabsHeader}"
+                                                                       FontSize="9.5"
+                                                                       FontWeight="SemiBold"
+                                                                       Foreground="{DynamicResource TextMutedBrush}"
+                                                                       VerticalAlignment="Center" />
+                                                        </StackPanel>
+                                                    </Button>
+
+                                                    <StackPanel Visibility="{Binding TabsExpanded, Converter={StaticResource BoolToVis}}"
+                                                                Margin="0,3,0,0">
+                                                        <ItemsControl ItemsSource="{Binding VisibleTabs}">
+                                                            <ItemsControl.ItemTemplate>
+                                                                <DataTemplate>
+                                                                    <StackPanel Orientation="Horizontal" Margin="0,1">
+                                                                        <TextBlock Text="&#xE774;"
+                                                                                   FontFamily="{StaticResource GlyphFont}"
+                                                                                   FontSize="9"
+                                                                                   Foreground="{DynamicResource TextMutedBrush}"
+                                                                                   Margin="0,0,6,0"
+                                                                                   VerticalAlignment="Center" />
+                                                                        <TextBlock Text="{Binding}"
+                                                                                   FontSize="10.5"
+                                                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                                                   TextTrimming="CharacterEllipsis"
+                                                                                   VerticalAlignment="Center" />
+                                                                    </StackPanel>
+                                                                </DataTemplate>
+                                                            </ItemsControl.ItemTemplate>
+                                                        </ItemsControl>
+
+                                                        <Grid Margin="0,4,0,0" Visibility="{Binding HasTabPages, Converter={StaticResource BoolToVis}}">
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto" />
+                                                                <ColumnDefinition Width="*" />
+                                                                <ColumnDefinition Width="Auto" />
+                                                            </Grid.ColumnDefinitions>
+
+                                                            <Button Grid.Column="0"
+                                                                    Content="Prev"
+                                                                    Style="{StaticResource GhostButton}"
+                                                                    FontSize="10"
+                                                                    Padding="8,3"
+                                                                    Command="{Binding DataContext.PreviousTabsCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    IsEnabled="{Binding HasPreviousTabs}" />
+
+                                                            <TextBlock Grid.Column="1"
+                                                                       Text="{Binding TabsPageText}"
+                                                                       FontSize="10"
+                                                                       Foreground="{DynamicResource TextMutedBrush}"
+                                                                       HorizontalAlignment="Center"
+                                                                       VerticalAlignment="Center" />
+
+                                                            <Button Grid.Column="2"
+                                                                    Content="Next"
+                                                                    Style="{StaticResource GhostButton}"
+                                                                    FontSize="10"
+                                                                    Padding="8,3"
+                                                                    Command="{Binding DataContext.NextTabsCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                                    CommandParameter="{Binding}"
+                                                                    IsEnabled="{Binding HasNextTabs}" />
+                                                        </Grid>
+                                                    </StackPanel>
                                                 </StackPanel>
                                                 </StackPanel>
                                             </Border>

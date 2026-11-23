@@ -51,6 +51,12 @@ public sealed record AppRow(
     bool IsExpanded,
     IReadOnlyList<AppProcessRow> Processes,
     IReadOnlyList<string> Tabs,
+    bool TabsExpanded,
+    IReadOnlyList<string> VisibleTabs,
+    string TabsPageText,
+    bool HasTabPages,
+    bool HasPreviousTabs,
+    bool HasNextTabs,
     string Tooltip)
 {
     /// <summary>False for protected processes the shell cannot give us an image for.</summary>
@@ -61,6 +67,9 @@ public sealed record AppRow(
     public string OutStateText => OutBlocked ? "Blocked" : "Allowed";
 
     public bool HasTabs => Tabs.Count > 0;
+
+    /// <summary>Tabs are only visible while the application row itself is expanded.</summary>
+    public bool ShowTabsSection => IsExpanded && HasTabs;
 
     public string TabsHeader => $"Tabs ({Tabs.Count})";
 }
