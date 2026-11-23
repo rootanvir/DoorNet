@@ -14,6 +14,7 @@ using DoorNet.Core.Collections;
 using DoorNet.Core.Formatting;
 using DoorNet.Core.Firewall;
 using DoorNet.Core.Models;
+using DoorNet.Core.Scanning;
 namespace DoorNet.App.ViewModels;
 
 /// <summary>
@@ -36,6 +37,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly HashSet<string> _expanded = new(StringComparer.Ordinal);
     private readonly GeoLocator _geo = new();
     private readonly NetworkScanner _scanner = new();
+    private readonly MacVendorLookup _macVendors = new();
     private readonly Dictionary<string, GeoPoint> _remoteGeo = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _geoPending = new(StringComparer.OrdinalIgnoreCase);
     private readonly HashSet<string> _geoFailed = new(StringComparer.OrdinalIgnoreCase);
@@ -961,6 +963,42 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+    private async Task EnrichVendorsAsync()
+    {
+        // Only registered (non-randomised) prefixes that the offline table does not know.
+        var targets = ScanDevices
+            .Where(row => row.Vendor == "Unknown vendor" && row.Mac != "—")
+            .Where(row => !MacAddress.IsLocallyAdministered(row.Mac))
+            .GroupBy(row => MacAddress.Prefix(row.Mac))
+            .Select(group => group.First())
+            .Take(16)
+            .ToList();
+
+        foreach (var target in targets)
+        {
+            var vendor = await _macVendors.LookupAsync(target.Mac).ConfigureAwait(true);
+            if (string.IsNullOrWhiteSpace(vendor))
+                continue;
+
+            var prefix = MacAddress.Prefix(target.Mac);
+            for (var i = 0; i < ScanDevices.Count; i++)
+            {
+                var row = ScanDevices[i];
+                if (row.Vendor != "Unknown vendor" || MacAddress.Prefix(row.Mac) != prefix)
+                    continue;
+
+                ScanDevices[i] = row with
+                {
+                    Vendor = vendor,
+                    Tooltip = row.Tooltip.Replace(
+                        "Vendor Unknown vendor",
+                        $"Vendor {vendor}",
+                        StringComparison.Ordinal)
+                };
+            }
+        }
+    }
+
     private async Task LoadLocalNetworkAsync()
     {
         try
@@ -1007,6 +1045,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
             ScannerSummaryText = $"{result.Devices.Count} devices · {result.Devices.Count(d => d.IsActive)} active";
             ScannerStatusText = $"Last scan {DateTime.Now:HH:mm:ss} · {result.Duration.TotalSeconds:0.0} s";
+            _ = EnrichVendorsAsync();
         }
         catch (Exception ex) when (ex is InvalidOperationException or System.Net.NetworkInformation.NetworkInformationException)
         {
@@ -1070,5 +1109,6 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _tabProbeCts.Cancel();
         _tabProbeCts.Dispose();
         _geo.Dispose();
+        _macVendors.Dispose();
     }
 }

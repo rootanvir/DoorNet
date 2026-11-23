@@ -43,6 +43,7 @@ Packet capture / DPI, VPN functionality, cross-platform, kernel drivers.
 | Total bytes up/down | `NetworkInterface.GetIPStatistics()` | No | Sum of IPv4+IPv6 counters on `Up`, non-loopback, non-tunnel adapters |
 | Connection list | `GetExtendedTcpTable` / `GetExtendedUdpTable` (`iphlpapi.dll`) | No | Returns owning PID per row, v4 and v6 |
 | LAN scan | ICMP echo, `GetIpNetTable` neighbour cache, `SendARP`, reverse DNS + NetBIOS + mDNS, 17-port TCP probe | No | Runs on demand; the whole sweep is one background task |
+| MAC vendor fallback | `api.macvendors.com` for prefixes missing from the offline table | internet | Six hex digits only, 1 request / 1.2 s, cached 90 days; randomised MACs skipped |
 | Local network card | `NetworkInterface` + `netsh wlan show interfaces` + ip-api (ISP, ASN, public IP) | No | Wi-Fi SSID/signal, router, DNS, hostname and OS build |
 | PID → process | `Process.GetProcessById` | No | `MainModule.FileName` can throw for protected processes; degrade to name |
 | **Per-app bytes** | **ETW** `Microsoft-Windows-Kernel-Network` | **Yes** | Real-time session, per-event PID + byte count. This is what GlassWire does |

@@ -43,6 +43,20 @@ public static class MacAddress
         return normalized.Length >= 6 ? normalized[..6] : string.Empty;
     }
 
+    /// <summary>
+    /// Locally administered (randomised) addresses are not in the IEEE registry, so a vendor
+    /// lookup would always miss. Bit 1 of the first octet marks them.
+    /// </summary>
+    public static bool IsLocallyAdministered(string mac)
+    {
+        var normalized = Normalize(mac);
+        if (normalized.Length < 2)
+            return false;
+
+        var first = Convert.ToByte(normalized[..2], 16);
+        return (first & 0x02) != 0;
+    }
+
     /// <summary>True for a real unicast address (not broadcast, multicast or all zero).</summary>
     public static bool IsUnicast(ReadOnlySpan<byte> bytes)
     {

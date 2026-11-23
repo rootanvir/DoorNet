@@ -1153,8 +1153,8 @@
                                 <ColumnDefinition Width="*" />
                                 <ColumnDefinition Width="112" />
                                 <ColumnDefinition Width="132" />
-                                <ColumnDefinition Width="106" />
-                                <ColumnDefinition Width="128" />
+                                <ColumnDefinition Width="100" />
+                                <ColumnDefinition Width="180" />
                                 <ColumnDefinition Width="112" />
                                 <ColumnDefinition Width="86" />
                                 <ColumnDefinition Width="84" />
@@ -1186,8 +1186,8 @@
                                                     <ColumnDefinition Width="*" />
                                                     <ColumnDefinition Width="112" />
                                                     <ColumnDefinition Width="132" />
-                                                    <ColumnDefinition Width="106" />
-                                                    <ColumnDefinition Width="128" />
+                                                    <ColumnDefinition Width="100" />
+                                                    <ColumnDefinition Width="180" />
                                                     <ColumnDefinition Width="112" />
                                                     <ColumnDefinition Width="86" />
                                                     <ColumnDefinition Width="84" />
