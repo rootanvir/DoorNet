@@ -504,7 +504,7 @@
                                                             AutomationProperties.Name="Download access"
                                                             ToolTip="Change download (inbound) access">
                                                         <Button.ContextMenu>
-                                                            <ContextMenu Padding="0">
+                                                            <ContextMenu Padding="0" Background="Transparent" BorderThickness="0">
                                                                 <MenuItem Command="{Binding PlacementTarget.Tag.ToggleDownloadCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                                           CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
                                                                     <MenuItem.Style>
@@ -533,7 +533,7 @@
                                                                                     </Style>
                                                                                 </TextBlock.Style>
                                                                             </TextBlock>
-                                                                            <TextBlock FontSize="11" VerticalAlignment="Center">
+                                                                            <TextBlock FontSize="10.5" FontWeight="SemiBold" VerticalAlignment="Center">
                                                                                 <TextBlock.Style>
                                                                                     <Style TargetType="TextBlock">
                                                                                         <Setter Property="Text" Value="Block" />
@@ -598,7 +598,7 @@
                                                             AutomationProperties.Name="Upload access"
                                                             ToolTip="Change upload (outbound) access">
                                                         <Button.ContextMenu>
-                                                            <ContextMenu Padding="0">
+                                                            <ContextMenu Padding="0" Background="Transparent" BorderThickness="0">
                                                                 <MenuItem Command="{Binding PlacementTarget.Tag.ToggleUploadCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                                           CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
                                                                     <MenuItem.Style>
@@ -627,7 +627,7 @@
                                                                                     </Style>
                                                                                 </TextBlock.Style>
                                                                             </TextBlock>
-                                                                            <TextBlock FontSize="11" VerticalAlignment="Center">
+                                                                            <TextBlock FontSize="10.5" FontWeight="SemiBold" VerticalAlignment="Center">
                                                                                 <TextBlock.Style>
                                                                                     <Style TargetType="TextBlock">
                                                                                         <Setter Property="Text" Value="Block" />

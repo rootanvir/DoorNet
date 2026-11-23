@@ -1,6 +1,7 @@
 ﻿using System.Runtime.InteropServices;
 using System.Windows;
 using System.Windows.Interop;
+using System.Windows.Media;
 using DoorNet.App.Platform;
 using DoorNet.App.ViewModels;
 
@@ -20,7 +21,7 @@ public partial class MainWindow : Window
 
     public MainViewModel ViewModel { get; }
 
-    /// <summary>Opens a pill's Allow/Block menu on left click (the menu is also right-click accessible).</summary>
+    /// <summary>Opens a pill's Allow/Block menu on left click, sized and placed to match the pill.</summary>
     private void OpenPillMenu(object sender, RoutedEventArgs e)
     {
         if (sender is not FrameworkElement element || element.ContextMenu is not { } menu)
@@ -28,8 +29,13 @@ public partial class MainWindow : Window
 
         menu.PlacementTarget = element;
         menu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+        menu.HorizontalOffset = 0;
+        menu.VerticalOffset = 4;
         menu.Padding = new Thickness(0);
+        menu.Background = Brushes.Transparent;
+        menu.BorderThickness = new Thickness(0);
         menu.Width = element.ActualWidth;
+        menu.MinWidth = element.ActualWidth;
         menu.IsOpen = true;
         e.Handled = true;
     }
