@@ -331,6 +331,7 @@
                                                    Markers="{Binding MapMarkers}"
                                                    Margin="0,8,0,0"
                                                    LandBrush="{DynamicResource MapLandBrush}"
+                                               OceanBrush="{DynamicResource MapOceanBrush}"
                                                    LocalBrush="{DynamicResource DownloadBrush}"
                                                    RemoteBrush="{DynamicResource DangerBrush}" />
                         </Grid>

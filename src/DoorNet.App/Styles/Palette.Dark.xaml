@@ -53,7 +53,8 @@
     <SolidColorBrush x:Key="TooltipTextBrush" Color="#DCE7F1" />
 
     <SolidColorBrush x:Key="ChartGridBrush" Color="#1B2733" />
-    <SolidColorBrush x:Key="MapLandBrush" Color="#22303D" />
+    <SolidColorBrush x:Key="MapLandBrush" Color="#25452F" />
+    <SolidColorBrush x:Key="MapOceanBrush" Color="#0C1A26" />
     <SolidColorBrush x:Key="ChartLabelBrush" Color="#5A6C7E" />
 
 </ResourceDictionary>

@@ -429,10 +429,10 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         var markers = new List<GeoMarker>(_remoteGeo.Count + 1);
 
         if (_selfGeo is { } self)
-            markers.Add(new GeoMarker(self.Latitude, self.Longitude, IsLocal: true, "Mine"));
+            markers.Add(new GeoMarker(self.Latitude, self.Longitude, IsLocal: true, "Mine", self.City, self.Country));
 
         foreach (var (address, point) in _remoteGeo.Take(300))
-            markers.Add(new GeoMarker(point.Latitude, point.Longitude, IsLocal: false, address));
+            markers.Add(new GeoMarker(point.Latitude, point.Longitude, IsLocal: false, address, point.City, point.Country));
 
         MapMarkers = markers;
         OnPropertyChanged(nameof(RemoteHostCountText));
