@@ -45,10 +45,13 @@ public sealed class WorldMapView : FrameworkElement
         typeof(WorldMapView),
         new FrameworkPropertyMetadata(Frozen("#35E08E"), FrameworkPropertyMetadataOptions.AffectsRender));
 
-    private const double LatTop = 85;
-    private const double LatBottom = -60;
+    // Land geometry is authored against this fixed band; the renderer stretches it onto
+    // whatever latitude range the card's aspect ratio calls for.
+    private const double FixedLatTop = 85;
+    private const double FixedLatBottom = -60;
 
     private static readonly Geometry Land = LoadLand();
+    private static readonly Pen CoastPen = CreateCoastPen();
     private static readonly Typeface TitleTypeface =
         new(new FontFamily("Segoe UI"), FontStyles.Normal, FontWeights.SemiBold, FontStretches.Normal);
     private static readonly Typeface BodyTypeface = new("Segoe UI");
@@ -94,20 +97,33 @@ public sealed class WorldMapView : FrameworkElement
             return;
 
         var dpi = VisualTreeHelper.GetDpi(this).PixelsPerDip;
-        var mapWidth = Math.Min(width, height * (360.0 / (LatTop - LatBottom)));
-        var mapHeight = mapWidth * ((LatTop - LatBottom) / 360.0);
-        var left = (width - mapWidth) / 2;
-        var top = (height - mapHeight) / 2;
-        var mapRect = new Rect(left, top, mapWidth, mapHeight);
+
+        // Fill the card edge to edge. Rather than letterboxing the fixed world band, derive
+        // the visible latitudes from the aspect ratio - a wider card trades polar margin for
+        // equatorial detail, so there is never dead space left or right of the map.
+        var mapRect = new Rect(0, 0, width, height);
+        var latSpan = Math.Clamp(360.0 * height / width, 70, FixedLatTop - FixedLatBottom);
+        var latBottom = Math.Max(-58.0, FixedLatBottom);
+        var latTop = latBottom + latSpan;
+        if (latTop > FixedLatTop)
+        {
+            latTop = FixedLatTop;
+            latBottom = latTop - latSpan;
+        }
 
         dc.DrawRoundedRectangle(OceanBrush, null, mapRect, 8, 8);
 
         dc.PushClip(new RectangleGeometry(mapRect, 8, 8));
-        DrawGraticule(dc, mapRect);
+        DrawGraticule(dc, mapRect, latTop, latBottom);
 
-        dc.PushTransform(new TranslateTransform(left, top));
-        dc.PushTransform(new ScaleTransform(mapWidth, mapHeight));
-        dc.DrawGeometry(LandBrush, null, Land);
+        var scaleY = (FixedLatTop - FixedLatBottom) / latSpan;
+        var offsetY = (FixedLatTop - latTop) / latSpan;
+
+        dc.PushTransform(new ScaleTransform(width, height));
+        dc.PushTransform(new TranslateTransform(0, -offsetY));
+        dc.PushTransform(new ScaleTransform(1, scaleY));
+        dc.DrawGeometry(LandBrush, CoastPen, Land);
+        dc.Pop();
         dc.Pop();
         dc.Pop();
         dc.Pop();
@@ -118,8 +134,11 @@ public sealed class WorldMapView : FrameworkElement
         {
             foreach (var marker in markers)
             {
-                var x = left + ((marker.Longitude + 180) / 360 * mapWidth);
-                var y = top + ((LatTop - Math.Clamp(marker.Latitude, LatBottom, LatTop)) / (LatTop - LatBottom) * mapHeight);
+                if (marker.Latitude > latTop || marker.Latitude < latBottom)
+                    continue;
+
+                var x = (marker.Longitude + 180) / 360 * width;
+                var y = (latTop - marker.Latitude) / latSpan * height;
                 var position = new Point(x, y);
 
                 if (marker.IsLocal)
@@ -143,7 +162,7 @@ public sealed class WorldMapView : FrameworkElement
             DrawCallout(dc, _dots[_hoverIndex], width, height, dpi);
     }
 
-    private static void DrawGraticule(DrawingContext dc, Rect mapRect)
+    private static void DrawGraticule(DrawingContext dc, Rect mapRect, double latTop, double latBottom)
     {
         var grid = new SolidColorBrush(Color.FromArgb(0x38, 0x9F, 0xB6, 0xC9));
         grid.Freeze();
@@ -156,9 +175,12 @@ public sealed class WorldMapView : FrameworkElement
             dc.DrawLine(pen, new Point(x, mapRect.Top), new Point(x, mapRect.Bottom));
         }
 
-        for (var lat = -30; lat <= 60; lat += 30)
+        for (var lat = -60; lat <= 60; lat += 30)
         {
-            var y = mapRect.Top + ((LatTop - lat) / (LatTop - LatBottom) * mapRect.Height);
+            if (lat < latBottom || lat > latTop)
+                continue;
+
+            var y = mapRect.Top + ((latTop - lat) / (latTop - latBottom) * mapRect.Height);
             dc.DrawLine(pen, new Point(mapRect.Left, y), new Point(mapRect.Right, y));
         }
     }
@@ -300,7 +322,7 @@ public sealed class WorldMapView : FrameworkElement
         {
             var lon = position[0].GetDouble();
             var lat = position[1].GetDouble();
-            var point = new Point((lon + 180) / 360, (LatTop - lat) / (LatTop - LatBottom));
+            var point = new Point((lon + 180) / 360, (FixedLatTop - lat) / (FixedLatTop - FixedLatBottom));
 
             if (first)
             {
@@ -312,6 +334,15 @@ public sealed class WorldMapView : FrameworkElement
                 context.LineTo(point, isStroked: false, isSmoothJoin: false);
             }
         }
+    }
+
+    private static Pen CreateCoastPen()
+    {
+        var brush = new SolidColorBrush(Color.FromArgb(0x30, 0x0B, 0x22, 0x16));
+        brush.Freeze();
+        var pen = new Pen(brush, 0.6);
+        pen.Freeze();
+        return pen;
     }
 
     private static Color SolidColorOf(Brush brush) =>
