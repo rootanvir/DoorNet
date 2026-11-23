@@ -50,6 +50,7 @@ public sealed record AppRow(
     bool OutBlocked,
     bool IsExpanded,
     IReadOnlyList<AppProcessRow> Processes,
+    IReadOnlyList<string> Tabs,
     string Tooltip)
 {
     /// <summary>False for protected processes the shell cannot give us an image for.</summary>
@@ -58,6 +59,10 @@ public sealed record AppRow(
     public string InStateText => InBlocked ? "Blocked" : "Allowed";
 
     public string OutStateText => OutBlocked ? "Blocked" : "Allowed";
+
+    public bool HasTabs => Tabs.Count > 0;
+
+    public string TabsHeader => $"Tabs ({Tabs.Count})";
 }
 
 /// <summary>One process behind an aggregated application row.</summary>

@@ -660,6 +660,34 @@
                                                         </DataTemplate>
                                                     </ItemsControl.ItemTemplate>
                                                 </ItemsControl>
+
+                                                <StackPanel Visibility="{Binding HasTabs, Converter={StaticResource BoolToVis}}"
+                                                            Margin="58,6,0,2">
+                                                    <TextBlock Text="{Binding TabsHeader}"
+                                                               FontSize="9.5"
+                                                               FontWeight="SemiBold"
+                                                               Foreground="{DynamicResource TextMutedBrush}"
+                                                               Margin="0,0,0,3" />
+                                                    <ItemsControl ItemsSource="{Binding Tabs}">
+                                                        <ItemsControl.ItemTemplate>
+                                                            <DataTemplate>
+                                                                <StackPanel Orientation="Horizontal" Margin="0,1">
+                                                                    <TextBlock Text="&#xE774;"
+                                                                               FontFamily="{StaticResource GlyphFont}"
+                                                                               FontSize="9"
+                                                                               Foreground="{DynamicResource TextMutedBrush}"
+                                                                               Margin="0,0,6,0"
+                                                                               VerticalAlignment="Center" />
+                                                                    <TextBlock Text="{Binding}"
+                                                                               FontSize="10.5"
+                                                                               Foreground="{DynamicResource TextSecondaryBrush}"
+                                                                               TextTrimming="CharacterEllipsis"
+                                                                               VerticalAlignment="Center" />
+                                                                </StackPanel>
+                                                            </DataTemplate>
+                                                        </ItemsControl.ItemTemplate>
+                                                    </ItemsControl>
+                                                </StackPanel>
                                                 </StackPanel>
                                             </Border>
                                         </DataTemplate>

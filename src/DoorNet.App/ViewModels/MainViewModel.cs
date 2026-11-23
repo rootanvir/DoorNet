@@ -1,6 +1,7 @@
 using System.Collections.ObjectModel;
 using System.Globalization;
 using System.Diagnostics;
+using System.IO;
 using System.Windows;
 using System.Windows.Threading;
 using DoorNet.App.Collections;
@@ -38,6 +39,9 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly HashSet<string> _geoFailed = new(StringComparer.OrdinalIgnoreCase);
     private GeoPoint? _selfGeo;
     private IReadOnlyList<GeoMarker> _mapMarkers = Array.Empty<GeoMarker>();
+    private IReadOnlyDictionary<string, BrowserTabInfo> _browserTabs =
+        new Dictionary<string, BrowserTabInfo>(StringComparer.OrdinalIgnoreCase);
+    private readonly CancellationTokenSource _tabProbeCts = new();
     private readonly DispatcherTimer _timer;
 
     private bool _tickRunning;
@@ -116,6 +120,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _timer.Start();
         _ = TickAsync();
         _ = LocateSelfAsync();
+        _ = ProbeTabsLoopAsync(_tabProbeCts.Token);
     }
 
     public ObservableCollection<ConnectionGroupRow> Connections { get; } = [];
@@ -377,6 +382,39 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+    private async Task ProbeTabsLoopAsync(CancellationToken cancellationToken)
+    {
+        while (!cancellationToken.IsCancellationRequested)
+        {
+            try
+            {
+                var tabs = await Task.Run(BrowserTabsProbe.Probe, cancellationToken).ConfigureAwait(false);
+
+                await Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    _browserTabs = tabs;
+                });
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+            catch (Exception)
+            {
+                // UI Automation can fail for a browser window mid-navigation; try again later.
+            }
+
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(4), cancellationToken).ConfigureAwait(false);
+            }
+            catch (OperationCanceledException)
+            {
+                return;
+            }
+        }
+    }
+
     private void RebuildMarkers()
     {
         var markers = new List<GeoMarker>(_remoteGeo.Count + 1);
@@ -565,6 +603,17 @@ public sealed class MainViewModel : ObservableObject, IDisposable
                 ? "No active outbound sockets"
                 : "Traffic only \u00B7 sockets closed";
 
+        BrowserTabInfo? tabs = null;
+
+        if (!string.IsNullOrEmpty(summary.Path))
+        {
+            var exe = Path.GetFileNameWithoutExtension(summary.Path);
+            _browserTabs.TryGetValue(exe, out tabs);
+        }
+
+        if (tabs is { Count: > 0 })
+            detail += $" \u00B7 {tabs.Count} tabs";
+
         var processes = summary.Apps
             .OrderByDescending(a => a.BytesReceived + a.BytesSent)
             .Select(a =>
@@ -603,6 +652,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             _firewall.IsBlocked(summary.Path, FirewallDirection.Out),
             expanded,
             processes,
+            tabs?.Titles ?? Array.Empty<string>(),
             summary.Path ?? $"PID {summary.Apps[0].ProcessId}");
     }
 
@@ -816,6 +866,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _disposed = true;
         _timer.Stop();
         (_perAppSource as IDisposable)?.Dispose();
+        _tabProbeCts.Cancel();
+        _tabProbeCts.Dispose();
         _geo.Dispose();
     }
 }
