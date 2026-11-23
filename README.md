@@ -80,9 +80,10 @@ totals, and firewall rule naming.
 The **Scanner** tab is split into sections - **Devices** today, **Port scan** next. Devices sweeps
 the subnet of the active adapter and lists every host it can prove
 exists: type, name, IP, MAC, system guess, vendor, open ports, latency and whether it is
-answering right now. Names come from reverse DNS and NetBIOS, MACs from the ARP cache plus a
-targeted `SendARP` retry, and the type/system is inferred from the vendor prefix and the
-ports that answered.
+answering right now. Names come from reverse DNS, NetBIOS and multicast DNS, MACs from the ARP
+cache plus a targeted `SendARP` retry, and the type/system is inferred from the vendor prefix
+and the ports that answered. Above the table, a local card summarises this machine: Wi-Fi SSID
+and signal, router and DNS, public IP with ISP and city, host name, OS build and MAC.
 
 ![DoorNet scanner](docs/screenshot-scanner.png)
 

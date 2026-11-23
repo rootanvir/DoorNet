@@ -16,7 +16,7 @@ public sealed class GeoLocator : IDisposable
 {
     private const string SelfKey = "__self__";
     private const string Endpoint = "http://ip-api.com/";
-    private const string Fields = "fields=status,lat,lon,city,country";
+    private const string Fields = "fields=status,lat,lon,city,country,isp,org,as,query";
 
     private static readonly TimeSpan SuccessTtl = TimeSpan.FromDays(30);
     private static readonly TimeSpan FailureTtl = TimeSpan.FromHours(1);
@@ -36,7 +36,7 @@ public sealed class GeoLocator : IDisposable
             Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
             "DoorNet");
 
-        _cachePath = Path.Combine(folder, "geo-cache.json");
+        _cachePath = Path.Combine(folder, "geo-cache-v2.json");
         LoadCache();
     }
 
@@ -174,8 +174,12 @@ public sealed class GeoLocator : IDisposable
 
             var city = root.TryGetProperty("city", out var cityElement) ? cityElement.GetString() : null;
             var country = root.TryGetProperty("country", out var countryElement) ? countryElement.GetString() : null;
+            var isp = root.TryGetProperty("isp", out var ispElement) ? ispElement.GetString() : null;
+            var org = root.TryGetProperty("org", out var orgElement) ? orgElement.GetString() : null;
+            var asn = root.TryGetProperty("as", out var asnElement) ? asnElement.GetString() : null;
+            var address = root.TryGetProperty("query", out var addressElement) ? addressElement.GetString() : null;
 
-            return new GeoPoint(lat.GetDouble(), lon.GetDouble(), city, country);
+            return new GeoPoint(lat.GetDouble(), lon.GetDouble(), city, country, isp, org, asn, address);
         }
         catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException or JsonException or IOException)
         {

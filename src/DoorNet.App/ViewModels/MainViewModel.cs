@@ -78,6 +78,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private string _scannerStatus = "Not scanned yet — run a scan to list the devices on this network.";
     private string _scannerSubnet = "—";
     private string _scannerSummary = string.Empty;
+    private LocalNetworkInfo? _localNetwork;
 
     public MainViewModel()
         : this(
@@ -132,6 +133,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         _timer.Start();
         _ = TickAsync();
         _ = LocateSelfAsync();
+        _ = LoadLocalNetworkAsync();
         _ = ProbeTabsLoopAsync(_tabProbeCts.Token);
     }
 
@@ -203,6 +205,44 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public string ScannerSubnetText { get => _scannerSubnet; private set => SetProperty(ref _scannerSubnet, value); }
     public string ScannerSummaryText { get => _scannerSummary; private set => SetProperty(ref _scannerSummary, value); }
     public bool HasScanResults => ScanDevices.Count > 0;
+
+    public string LocalNetworkName => _localNetwork?.NetworkName ?? "Detecting…";
+
+    public string LocalNetworkDetail => _localNetwork is { } network
+        ? string.Join(" · ", new[] { network.ConnectionType, network.WifiDetails.Length > 0 ? network.WifiDetails : network.LinkSpeed }
+            .Where(part => !string.IsNullOrWhiteSpace(part)))
+        : string.Empty;
+
+    public string LocalRouterText => _localNetwork?.Gateway ?? "—";
+
+    public string LocalRouterDetail => _localNetwork is { } network
+        ? $"subnet {network.Subnet} · DNS {network.DnsServers}"
+        : "—";
+
+    public string LocalHostText => _localNetwork?.HostName ?? Environment.MachineName;
+
+    public string LocalHostDetail => _localNetwork is { } network
+        ? $"{network.OsVersion} · {network.LocalAddress} · {network.MacAddress}"
+        : Environment.OSVersion.VersionString;
+
+    public string LocalPublicIpText => _selfGeo?.Address ?? "—";
+
+    public string LocalIspText
+    {
+        get
+        {
+            if (_selfGeo is not { } geo)
+                return "Looking up…";
+
+            var parts = new[] { geo.NetworkText, geo.LocationText }
+                .Where(part => !string.IsNullOrWhiteSpace(part));
+
+            var text = string.Join(" · ", parts);
+            return text.Length > 0 ? text : "—";
+        }
+    }
+
+    public string LocalDnsText => _localNetwork?.DnsServers ?? "—";
     public string ElevationNote { get; }
     public string PerAppNote { get; }
 
@@ -410,6 +450,8 @@ public sealed class MainViewModel : ObservableObject, IDisposable
             await Application.Current.Dispatcher.InvokeAsync(() =>
             {
                 _selfGeo = geo;
+                OnPropertyChanged(nameof(LocalPublicIpText));
+                OnPropertyChanged(nameof(LocalIspText));
                 RebuildMarkers();
             });
         }
@@ -919,6 +961,29 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         }
     }
 
+    private async Task LoadLocalNetworkAsync()
+    {
+        try
+        {
+            var info = await Task.Run(LocalNetworkProbe.Read);
+            if (info is null)
+                return;
+
+            _localNetwork = info;
+            OnPropertyChanged(nameof(LocalNetworkName));
+            OnPropertyChanged(nameof(LocalNetworkDetail));
+            OnPropertyChanged(nameof(LocalRouterText));
+            OnPropertyChanged(nameof(LocalRouterDetail));
+            OnPropertyChanged(nameof(LocalHostText));
+            OnPropertyChanged(nameof(LocalHostDetail));
+            OnPropertyChanged(nameof(LocalDnsText));
+        }
+        catch (Exception)
+        {
+            // Best effort: the local card keeps its placeholders.
+        }
+    }
+
     private async Task ScanNetworkAsync()
     {
         if (IsScanning)
@@ -929,6 +994,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         OnPropertyChanged(nameof(HasScanResults));
         ScannerSummaryText = string.Empty;
         ScannerStatusText = "Starting scan…";
+        _ = LoadLocalNetworkAsync();
 
         try
         {

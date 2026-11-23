@@ -37,7 +37,7 @@ public sealed class NetworkScanner
         CancellationToken cancellationToken = default)
     {
         var stopwatch = Stopwatch.StartNew();
-        var network = FindNetwork()
+        var network = ActiveNetwork.Find()
             ?? throw new InvalidOperationException("No active IPv4 network was found.");
 
         var subnet = LanSubnet.Cidr(network.Address, network.Mask);
@@ -128,6 +128,18 @@ public sealed class NetworkScanner
             async (probe, token) =>
             {
                 var name = await TryNetBiosNameAsync(probe.Address, token).ConfigureAwait(false);
+                if (name.Length > 0)
+                    names[probe.Address] = name;
+            }).ConfigureAwait(false);
+
+        // Phones, printers and IoT gear often only answer multicast DNS.
+        var stillUnnamed = candidates.Where(p => !names.ContainsKey(p.Address)).ToList();
+        await Parallel.ForEachAsync(
+            stillUnnamed,
+            new ParallelOptions { MaxDegreeOfParallelism = NameParallelism, CancellationToken = cancellationToken },
+            async (probe, token) =>
+            {
+                var name = await TryMdnsNameAsync(probe.Address, token).ConfigureAwait(false);
                 if (name.Length > 0)
                     names[probe.Address] = name;
             }).ConfigureAwait(false);
@@ -438,6 +450,146 @@ public sealed class NetworkScanner
         return offset;
     }
 
+    /// <summary>
+    /// Multicast DNS reverse lookup: asks 224.0.0.251 for the PTR of the address, with the
+    /// unicast-response bit set so phones and printers that publish a .local name answer us
+    /// directly. Silent hosts simply time out.
+    /// </summary>
+    private static async Task<string> TryMdnsNameAsync(IPAddress address, CancellationToken token)
+    {
+        if (address.AddressFamily != AddressFamily.InterNetwork)
+            return string.Empty;
+
+        try
+        {
+            using var udp = new UdpClient(AddressFamily.InterNetwork);
+            var query = BuildMdnsReverseQuery(address);
+
+            await udp.SendAsync(query.AsMemory(), new IPEndPoint(IPAddress.Parse("224.0.0.251"), 5353), token)
+                .ConfigureAwait(false);
+
+            using var timeout = CancellationTokenSource.CreateLinkedTokenSource(token);
+            timeout.CancelAfter(500);
+
+            var response = await udp.ReceiveAsync(timeout.Token).ConfigureAwait(false);
+            return ParseMdnsPtr(response.Buffer);
+        }
+        catch (Exception ex) when (ex is SocketException or OperationCanceledException or FormatException)
+        {
+            return string.Empty;
+        }
+    }
+
+    private static byte[] BuildMdnsReverseQuery(IPAddress address)
+    {
+        var packet = new List<byte> { 0x00, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+
+        foreach (var label in address.ToString().Split('.'))
+        {
+            packet.Add((byte)label.Length);
+            packet.AddRange(Encoding.ASCII.GetBytes(label));
+        }
+
+        foreach (var label in new[] { "in-addr", "arpa" })
+        {
+            packet.Add((byte)label.Length);
+            packet.AddRange(Encoding.ASCII.GetBytes(label));
+        }
+
+        packet.Add(0x00);       // end of name
+        packet.Add(0x00);
+        packet.Add(0x0C);       // PTR
+        packet.Add(0x80);       // unicast response requested
+        packet.Add(0x01);       // IN
+        return packet.ToArray();
+    }
+
+    private static string ParseMdnsPtr(byte[] buffer)
+    {
+        if (buffer.Length < 12)
+            return string.Empty;
+
+        var questions = (buffer[4] << 8) | buffer[5];
+        var answers = (buffer[6] << 8) | buffer[7];
+
+        var offset = 12;
+
+        for (var i = 0; i < questions && offset < buffer.Length; i++)
+        {
+            ReadDnsName(buffer, ref offset);
+            offset += 4;
+        }
+
+        for (var i = 0; i < answers && offset < buffer.Length; i++)
+        {
+            ReadDnsName(buffer, ref offset);
+
+            if (offset + 10 > buffer.Length)
+                break;
+
+            var type = (buffer[offset] << 8) | buffer[offset + 1];
+            var length = (buffer[offset + 8] << 8) | buffer[offset + 9];
+            offset += 10;
+
+            if (offset + length > buffer.Length)
+                break;
+
+            if (type == 12)
+            {
+                var nameOffset = offset;
+                var name = ReadDnsName(buffer, ref nameOffset);
+                if (name.Length > 0)
+                    return name.TrimEnd('.');
+            }
+
+            offset += length;
+        }
+
+        return string.Empty;
+    }
+
+    private static string ReadDnsName(byte[] buffer, ref int offset)
+    {
+        var labels = new List<string>();
+        var jumped = false;
+        var safety = 0;
+
+        while (offset >= 0 && offset < buffer.Length && safety++ < 64)
+        {
+            var length = buffer[offset];
+
+            if (length == 0)
+            {
+                if (!jumped)
+                    offset += 1;
+
+                break;
+            }
+
+            if ((length & 0xC0) == 0xC0)
+            {
+                if (offset + 1 >= buffer.Length)
+                    break;
+
+                var pointer = ((length & 0x3F) << 8) | buffer[offset + 1];
+                if (!jumped)
+                    offset += 2;
+
+                jumped = true;
+                offset = pointer;
+                continue;
+            }
+
+            if (offset + 1 + length > buffer.Length)
+                break;
+
+            labels.Add(Encoding.ASCII.GetString(buffer, offset + 1, length));
+            offset += 1 + length;
+        }
+
+        return string.Join(".", labels);
+    }
+
     private static async Task<Dictionary<IPAddress, IReadOnlyList<int>>> ScanPortsAsync(
         IReadOnlyList<IPAddress> hosts,
         IProgress<ScanProgress>? progress,
@@ -489,51 +641,6 @@ public sealed class NetworkScanner
         }
     }
 
-    private static LocalNetwork? FindNetwork()
-    {
-        LocalNetwork? fallback = null;
-
-        try
-        {
-            foreach (var adapter in NetworkInterface.GetAllNetworkInterfaces())
-            {
-                if (adapter.OperationalStatus != OperationalStatus.Up)
-                    continue;
-
-                if (adapter.NetworkInterfaceType is NetworkInterfaceType.Loopback or NetworkInterfaceType.Tunnel)
-                    continue;
-
-                var properties = adapter.GetIPProperties();
-                var gateway = properties.GatewayAddresses
-                    .Select(g => g.Address)
-                    .FirstOrDefault(a => a is not null
-                        && a.AddressFamily == AddressFamily.InterNetwork
-                        && !a.Equals(IPAddress.Any));
-
-                foreach (var unicast in properties.UnicastAddresses)
-                {
-                    if (unicast.Address.AddressFamily != AddressFamily.InterNetwork)
-                        continue;
-
-                    if (IPAddress.IsLoopback(unicast.Address) || unicast.IPv4Mask is null)
-                        continue;
-
-                    var candidate = new LocalNetwork(adapter, unicast.Address, unicast.IPv4Mask, gateway);
-
-                    if (gateway is not null)
-                        return candidate;
-
-                    fallback ??= candidate;
-                }
-            }
-        }
-        catch (Exception ex) when (ex is NetworkInformationException or PlatformNotSupportedException)
-        {
-        }
-
-        return fallback;
-    }
-
     private static string SafeMachineName()
     {
         try
@@ -547,12 +654,6 @@ public sealed class NetworkScanner
     }
 
     private sealed record Probe(IPAddress Address, bool Alive, long LatencyMs, string Mac);
-
-    private sealed record LocalNetwork(
-        NetworkInterface Adapter,
-        IPAddress Address,
-        IPAddress Mask,
-        IPAddress? Gateway);
 
     [DllImport("iphlpapi.dll", ExactSpelling = true)]
     private static extern int SendARP(uint destination, uint source, [Out] byte[] macAddress, ref uint length);
