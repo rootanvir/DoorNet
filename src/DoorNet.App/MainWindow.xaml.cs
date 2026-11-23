@@ -20,6 +20,18 @@ public partial class MainWindow : Window
 
     public MainViewModel ViewModel { get; }
 
+    /// <summary>Opens a pill's Allow/Block menu on left click (the menu is also right-click accessible).</summary>
+    private void OpenPillMenu(object sender, RoutedEventArgs e)
+    {
+        if (sender is not FrameworkElement element || element.ContextMenu is not { } menu)
+            return;
+
+        menu.PlacementTarget = element;
+        menu.Placement = System.Windows.Controls.Primitives.PlacementMode.Bottom;
+        menu.IsOpen = true;
+        e.Handled = true;
+    }
+
     protected override void OnSourceInitialized(EventArgs e)
     {
         base.OnSourceInitialized(e);
