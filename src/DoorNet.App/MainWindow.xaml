@@ -37,22 +37,9 @@
                     <ColumnDefinition Width="Auto" />
                 </Grid.ColumnDefinitions>
 
-                <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                    <Border Width="30" Height="30" CornerRadius="9" Background="{DynamicResource LogoBrush}" BorderBrush="{DynamicResource LogoBorderBrush}" BorderThickness="1">
-                        <TextBlock Text="D"
-                                   FontFamily="{StaticResource DisplayFont}"
-                                   FontSize="15"
-                                   FontWeight="Bold"
-                                   Foreground="{DynamicResource DownloadBrush}"
-                                   HorizontalAlignment="Center"
-                                   VerticalAlignment="Center" />
-                    </Border>
-                </StackPanel>
-
-                <StackPanel Grid.Column="1"
+                <StackPanel Grid.Column="0"
                             Orientation="Horizontal"
-                            VerticalAlignment="Center"
-                            Margin="18,0,0,0">
+                            VerticalAlignment="Center">
                     <RadioButton x:Name="MonitorTab"
                                  GroupName="NavTabs"
                                  IsChecked="True"
