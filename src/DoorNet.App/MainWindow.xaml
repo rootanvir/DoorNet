@@ -468,7 +468,7 @@
                                                                         <Setter Property="Visibility" Value="Visible" />
                                                                         <Style.Triggers>
                                                                             <DataTrigger Binding="{Binding HasIcon}" Value="True">
-                                                                                <Setter Property="Visibility" Value="Collapsed" />
+                                                                                <Setter Property="Visibility" Value="Hidden" />
                                                                             </DataTrigger>
                                                                         </Style.Triggers>
                                                                     </Style>
@@ -504,7 +504,7 @@
                                                             AutomationProperties.Name="Download access"
                                                             ToolTip="Change download (inbound) access">
                                                         <Button.ContextMenu>
-                                                            <ContextMenu Padding="0" Background="Transparent" BorderThickness="0">
+                                                            <ContextMenu Style="{StaticResource AccessMenu}">
                                                                 <MenuItem Command="{Binding PlacementTarget.Tag.ToggleDownloadCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                                           CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
                                                                     <MenuItem.Style>
@@ -571,7 +571,7 @@
                                                             <TextBlock Text="&#xE73E;" FontFamily="{StaticResource GlyphFont}" FontSize="9" Margin="4,0,0,0" VerticalAlignment="Center">
                                                                 <TextBlock.Style>
                                                                     <Style TargetType="TextBlock">
-                                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                                        <Setter Property="Visibility" Value="Hidden" />
                                                                         <Style.Triggers>
                                                                             <DataTrigger Binding="{Binding InBlocked}" Value="False">
                                                                                 <Setter Property="Visibility" Value="Visible" />
@@ -598,7 +598,7 @@
                                                             AutomationProperties.Name="Upload access"
                                                             ToolTip="Change upload (outbound) access">
                                                         <Button.ContextMenu>
-                                                            <ContextMenu Padding="0" Background="Transparent" BorderThickness="0">
+                                                            <ContextMenu Style="{StaticResource AccessMenu}">
                                                                 <MenuItem Command="{Binding PlacementTarget.Tag.ToggleUploadCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}"
                                                                           CommandParameter="{Binding PlacementTarget.DataContext, RelativeSource={RelativeSource AncestorType=ContextMenu}}">
                                                                     <MenuItem.Style>
@@ -665,7 +665,7 @@
                                                             <TextBlock Text="&#xE73E;" FontFamily="{StaticResource GlyphFont}" FontSize="9" Margin="4,0,0,0" VerticalAlignment="Center">
                                                                 <TextBlock.Style>
                                                                     <Style TargetType="TextBlock">
-                                                                        <Setter Property="Visibility" Value="Collapsed" />
+                                                                        <Setter Property="Visibility" Value="Hidden" />
                                                                         <Style.Triggers>
                                                                             <DataTrigger Binding="{Binding OutBlocked}" Value="False">
                                                                                 <Setter Property="Visibility" Value="Visible" />
@@ -869,7 +869,7 @@
                                        VerticalAlignment="Center">
                                 <TextBlock.Style>
                                     <Style TargetType="TextBlock" BasedOn="{StaticResource Caption}">
-                                        <Setter Property="Visibility" Value="Collapsed" />
+                                        <Setter Property="Visibility" Value="Hidden" />
                                         <Style.Triggers>
                                             <DataTrigger Binding="{Binding Apps.Count}" Value="0">
                                                 <Setter Property="Visibility" Value="Visible" />
