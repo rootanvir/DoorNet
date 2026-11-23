@@ -154,7 +154,6 @@ branding are not reused).
   reserved for the navigation tabs.
 - Status row: download, upload and session-total tiles. Large tabular numerals.
 - Map card: title row with an inline live/paused pill next to the legend, then the world map.
-- Three status tiles: download rate, upload rate, session total. Large tabular numerals.
 - Main chart: 90 s dual-series area chart, auto-scaled, drawn natively (no chart library).
 - Split pane: top applications (left) and live connections (right, sortable grid).
 - Restrained palette: `#0E1217` canvas, `#151B22` cards, `#35E08E` download,
