@@ -1,8 +1,10 @@
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.Globalization;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
+using System.Windows.Data;
 using System.Windows.Threading;
 using DoorNet.App.Collections;
 using DoorNet.App.Platform;
@@ -15,6 +17,7 @@ using DoorNet.Core.Formatting;
 using DoorNet.Core.Firewall;
 using DoorNet.Core.Models;
 using DoorNet.Core.Scanning;
+using DoorNet.Core.Threats;
 namespace DoorNet.App.ViewModels;
 
 /// <summary>
@@ -49,6 +52,16 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private readonly Dictionary<string, int> _tabPages = new(StringComparer.Ordinal);
     private readonly CancellationTokenSource _tabProbeCts = new();
     private readonly DispatcherTimer _timer;
+    private readonly DispatcherTimer _trafficTimer;
+    private bool _trafficSampling;
+    private readonly Dictionary<string, UrlTrack> _urlTracks = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _dismissedAlerts = new(StringComparer.OrdinalIgnoreCase);
+    private readonly HashSet<string> _allowedHosts;
+    private readonly VirusTotalClient _reputation = new();
+    private Dictionary<string, RecentTraffic> _recentTraffic = new(StringComparer.Ordinal);
+    private List<TrafficRow> _allTraffic = [];
+    private string _selectedFilterKey = "all";
+    private static readonly TimeSpan TrafficRetention = TimeSpan.FromSeconds(8);
 
     private bool _tickRunning;
     private bool _isCapturing = true;
@@ -80,6 +93,14 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     private string _scannerStatus = "Not scanned yet — run a scan to list the devices on this network.";
     private string _scannerSubnet = "—";
     private string _scannerSummary = string.Empty;
+    private int _analyzedUrlCount;
+    private int _suspiciousUrlCount;
+    private bool _rebuilding;
+    private bool _rebuildQueued;
+    private string _apiKeyInput = string.Empty;
+    private string _urlScanSummary = "No browser page seen yet — open one and DoorNet scores it within a few seconds.";
+    private string _trafficSummary = "Collecting traffic…";
+    private string _icmpSummary = "no ICMP echo traffic seen yet";
     private LocalNetworkInfo? _localNetwork;
 
     public MainViewModel()
@@ -115,6 +136,19 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         NextTabsCommand = new RelayCommand<object?>(row => ChangeTabPage(row, 1));
         ToggleFirewallCommand = new RelayCommand(ToggleFirewall);
         ScanNetworkCommand = new RelayCommand(() => _ = ScanNetworkAsync());
+        DismissAlertCommand = new RelayCommand<object?>(DismissAlert);
+        WhitelistAlertCommand = new RelayCommand<object?>(WhitelistAlert);
+        CopyAlertCommand = new RelayCommand<object?>(CopyAlert);
+        SaveApiKeyCommand = new RelayCommand(SaveApiKey);
+        ClearApiKeyCommand = new RelayCommand(ClearApiKey);
+        RemoveWhitelistedHostCommand = new RelayCommand<object?>(RemoveWhitelistedHost);
+        SelectProtocolFilterCommand = new RelayCommand<object?>(SelectProtocolFilter);
+
+        _allowedHosts = new HashSet<string>(SettingsStore.Load().WhitelistedHosts, StringComparer.OrdinalIgnoreCase);
+        LoadWhitelistedHosts();
+
+        foreach (var rule in UrlAnalyzer.Rules)
+            DetectionRules.Add(new DetectionRuleRow(rule.Id, rule.Title, $"+{rule.Weight}", rule.Detail));
 
         CanOfferElevation = !Environment.IsPrivilegedProcess;
 
@@ -132,7 +166,16 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         };
         _timer.Tick += (_, _) => _ = TickAsync();
 
+        // Sockets come and go in well under a second (curl, short API calls), so sample faster
+        // than the dashboard tick and remember what disappeared for a few seconds.
+        _trafficTimer = new DispatcherTimer(DispatcherPriority.Background)
+        {
+            Interval = TimeSpan.FromMilliseconds(500)
+        };
+        _trafficTimer.Tick += (_, _) => _ = SampleTrafficAsync();
+
         _timer.Start();
+        _trafficTimer.Start();
         _ = TickAsync();
         _ = LocateSelfAsync();
         _ = LoadLocalNetworkAsync();
@@ -142,6 +185,15 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public ObservableCollection<ConnectionGroupRow> Connections { get; } = [];
     public ObservableCollection<AppRow> Apps { get; } = [];
     public ObservableCollection<ScannerRow> ScanDevices { get; } = [];
+    public ObservableCollection<UrlFindingRow> UrlFindings { get; } = [];
+    public ObservableCollection<UrlAlertRow> UrlAlerts { get; } = [];
+    public ObservableCollection<DetectionRuleRow> DetectionRules { get; } = [];
+    public ObservableCollection<ReputationRow> Reputations { get; } = [];
+    public ObservableCollection<TrafficRow> Traffic { get; } = [];
+    public ObservableCollection<string> WhitelistedHosts { get; } = [];
+
+    /// <summary>Protocol choices for the Traffic filter, rebuilt from what is on screen.</summary>
+    public ObservableCollection<ProtocolFilterOption> ProtocolFilters { get; } = [];
 
     public RelayCommand ToggleCaptureCommand { get; }
     public RelayCommand ResetSessionCommand { get; }
@@ -155,6 +207,13 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public RelayCommand<object?> NextTabsCommand { get; }
     public RelayCommand ToggleFirewallCommand { get; }
     public RelayCommand ScanNetworkCommand { get; }
+    public RelayCommand<object?> DismissAlertCommand { get; }
+    public RelayCommand<object?> WhitelistAlertCommand { get; }
+    public RelayCommand<object?> CopyAlertCommand { get; }
+    public RelayCommand SaveApiKeyCommand { get; }
+    public RelayCommand ClearApiKeyCommand { get; }
+    public RelayCommand<object?> RemoveWhitelistedHostCommand { get; }
+    public RelayCommand<object?> SelectProtocolFilterCommand { get; }
 
     /// <summary>Master switch for every DoorNet firewall rule.</summary>
     public bool IsFirewallEnabled => _firewall.IsEnabled;
@@ -207,6 +266,62 @@ public sealed class MainViewModel : ObservableObject, IDisposable
     public string ScannerSubnetText { get => _scannerSubnet; private set => SetProperty(ref _scannerSubnet, value); }
     public string ScannerSummaryText { get => _scannerSummary; private set => SetProperty(ref _scannerSummary, value); }
     public bool HasScanResults => ScanDevices.Count > 0;
+
+    /// <summary>Header label carries the live count so alerts are visible from any tab.</summary>
+    public string AlertsTabLabel => UrlAlerts.Count == 0 ? "Alerts" : $"Alerts ({UrlAlerts.Count})";
+
+    public bool HasUrlAlerts => UrlAlerts.Count > 0;
+
+    /// <summary>Summary line for the Traffic tab.</summary>
+    public string TrafficSummary
+    {
+        get => _trafficSummary;
+        private set => SetProperty(ref _trafficSummary, value);
+    }
+
+    public string IcmpSummary
+    {
+        get => _icmpSummary;
+        private set => SetProperty(ref _icmpSummary, value);
+    }
+
+    public bool HasTraffic => _allTraffic.Count > 0;
+
+    /// <summary>Text on the Traffic filter button, e.g. "Filter: All (348)".</summary>
+    public string ProtocolFilterLabel
+    {
+        get
+        {
+            var option = ProtocolFilters.FirstOrDefault(item => item.Key == _selectedFilterKey)
+                         ?? ProtocolFilters.FirstOrDefault();
+
+            return option is null ? "Filter: All" : $"Filter: {option.Display}";
+        }
+    }
+
+    public bool HasWhitelistedHosts => WhitelistedHosts.Count > 0;
+
+    public string UrlScanSummary
+    {
+        get => _urlScanSummary;
+        private set => SetProperty(ref _urlScanSummary, value);
+    }
+
+    public string UrlAlertsSummary => HasUrlAlerts
+        ? $"{UrlAlerts.Count} suspicious address(es) need a decision"
+        : "Nothing suspicious right now.";
+
+    public int AnalyzedUrlCount { get => _analyzedUrlCount; private set => SetProperty(ref _analyzedUrlCount, value); }
+
+    public int SuspiciousUrlCount { get => _suspiciousUrlCount; private set => SetProperty(ref _suspiciousUrlCount, value); }
+
+    /// <summary>VirusTotal state: configured (with a masked key) or the reason it is not.</summary>
+    public string ReputationStatusText => _reputation.StatusText;
+
+    public bool IsReputationAvailable => _reputation.IsAvailable;
+
+    /// <summary>Text the user types into the app's key field; cleared after saving.</summary>
+    public string ApiKeyInput { get => _apiKeyInput; set => SetProperty(ref _apiKeyInput, value); }
 
     public string LocalNetworkName => _localNetwork?.NetworkName ?? "Detecting…";
 
@@ -371,6 +486,11 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         var traffic = _perAppSource.Drain();
         var aggregated = AppUsageAggregator.Aggregate(connections, traffic);
+
+        // DoorNet is an application on this machine like any other: list it even while it has
+        // no sockets of its own, instead of letting it appear only during its own requests.
+        aggregated = IncludeSelf(aggregated);
+
         var showMeters = _perAppSource.IsAvailable;
 
         if (showMeters)
@@ -384,6 +504,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         BuildConnectionGroups(connections);
         BuildAppGroups(aggregated, showMeters);
+        MergeTraffic(connections, rebuild: true);
         QueueGeolocation(connections);
     }
 
@@ -474,6 +595,7 @@ public sealed class MainViewModel : ObservableObject, IDisposable
                 await Application.Current.Dispatcher.InvokeAsync(() =>
                 {
                     _browserTabs = tabs;
+                    AnalyzeBrowserUrls(tabs);
                 });
             }
             catch (OperationCanceledException)
@@ -559,8 +681,29 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         AppCount = apps.Count;
     }
 
-    private void BuildConnectionGroups(IReadOnlyList<ConnectionInfo> connections)
-    {
+    /// <summary>Adds this process to the app list when the socket tables do not mention it.</summary>
+    private static IReadOnlyList<AppUsage> IncludeSelf(IReadOnlyList<AppUsage> apps)    {
+        if (apps.Any(app => app.ProcessId == Environment.ProcessId))
+            return apps;
+
+        var path = Environment.ProcessPath;
+        if (string.IsNullOrWhiteSpace(path))
+            return apps;
+
+        var rows = new List<AppUsage>(apps.Count + 1);
+        rows.AddRange(apps);
+        rows.Add(new AppUsage
+        {
+            ProcessId = Environment.ProcessId,
+            ProcessName = Path.GetFileNameWithoutExtension(path),
+            ExecutablePath = path
+        });
+
+        return rows;
+    }
+
+
+    private void BuildConnectionGroups(IReadOnlyList<ConnectionInfo> connections)    {
         var groups = connections
             .Where(c => c.RemotePort != 0 || c.IsListening)
             .GroupBy(AppKey, StringComparer.OrdinalIgnoreCase)
@@ -1077,8 +1220,587 @@ public sealed class MainViewModel : ObservableObject, IDisposable
         device.IsActive,
         $"{device.KindText} · {device.System}\nIP {device.Address}\nMAC {(string.IsNullOrEmpty(device.Mac) ? "unknown" : device.Mac)}\nVendor {device.VendorText}\nOpen ports: {device.PortsText}\n{(device.IsActive ? $"Responding · {device.LatencyText}" : "Not responding (MAC known)")}");
 
-    private void ResetSession()
+    /// <summary>Scores the address of every browser's active tab and refreshes the threat lists.</summary>
+    private void AnalyzeBrowserUrls(IReadOnlyDictionary<string, BrowserTabInfo> tabs)
     {
+        var now = DateTimeOffset.Now;
+
+        foreach (var (process, info) in tabs)
+        {
+            if (string.IsNullOrWhiteSpace(info.Address))
+                continue;
+
+            var assessment = UrlAnalyzer.Assess(info.Address);
+            if (string.IsNullOrEmpty(assessment.Host))
+                continue;
+
+            var key = process + "|" + assessment.Url;
+            if (!_urlTracks.TryGetValue(key, out var track))
+            {
+                track = new UrlTrack
+                {
+                    Url = assessment.Url,
+                    Host = assessment.Host,
+                    Process = process,
+                    FirstSeen = now
+                };
+                _urlTracks[key] = track;
+            }
+
+            // Keep the worst verdict for as long as the address stays open.
+            if (assessment.Score >= (track.Assessment?.Score ?? -1))
+                track.Assessment = assessment;
+
+            track.LastSeen = now;
+            track.Hits++;
+        }
+
+        RebuildThreatRows();
+    }
+
+    private void RebuildThreatRows()
+    {
+        // A cached reputation completes synchronously, so enrichment can call back into this
+        // method while the outer pass is still building rows. Queue instead of nesting.
+        if (_rebuilding)
+        {
+            _rebuildQueued = true;
+            return;
+        }
+
+        _rebuilding = true;
+        try
+        {
+            BuildThreatRows();
+        }
+        finally
+        {
+            _rebuilding = false;
+        }
+
+        RebuildTraffic();
+
+        if (_rebuildQueued)
+        {
+            _rebuildQueued = false;
+            RebuildThreatRows();
+        }
+    }
+
+    private void BuildThreatRows()
+    {
+        var findings = new List<UrlFindingRow>(_urlTracks.Count);
+        var alerts = new List<UrlAlertRow>();
+        var danger = 0;
+        var suspicious = 0;
+        var watch = 0;
+
+        foreach (var track in _urlTracks.Values
+                     .OrderBy(track => track.Assessment is null
+                         ? UrlCategories.Rank(UrlCategory.Safe)
+                         : UrlCategories.Rank(UrlCategories.For(track.Assessment)))
+                     .ThenByDescending(track => track.Assessment?.Score ?? 0)
+                     .ThenByDescending(track => track.LastSeen))
+        {
+            if (track.Assessment is not { } assessment)
+                continue;
+
+            // The local score plus whatever reputation adds, capped at 100.
+            var score = Math.Min(100, assessment.Score + (track.Reputation?.Weight ?? 0));
+            var category = assessment.IsExempt ? UrlCategory.Safe : UrlCategories.For(score);
+            var isSuspicious = category is UrlCategory.Danger or UrlCategory.Suspicious;
+
+            switch (category)
+            {
+                case UrlCategory.Danger:
+                    danger++;
+                    break;
+                case UrlCategory.Suspicious:
+                    suspicious++;
+                    break;
+                case UrlCategory.Watch:
+                    watch++;
+                    break;
+            }
+
+            findings.Add(new UrlFindingRow(
+                track.Process + "|" + track.Url,
+                track.Url,
+                track.Host,
+                track.Process,
+                score.ToString(CultureInfo.InvariantCulture),
+                UrlCategories.Label(category),
+                UrlCategories.Label(category),
+                SeverityBrushes.For(category),
+                assessment.Reasons,
+                track.LastSeen.ToString("HH:mm:ss", CultureInfo.CurrentCulture),
+                isSuspicious));
+
+            var alertKey = AlertKeyFor(track.Process, track.Host);
+            if (!isSuspicious
+                || _dismissedAlerts.Contains(alertKey)
+                || _allowedHosts.Contains(track.Host))
+            {
+                continue;
+            }
+
+            // Ask the reputation service once per host, in the background.
+            if (_reputation.IsAvailable && track.Reputation is null && !track.ReputationRequested && IsPublicHost(track.Host))
+            {
+                track.ReputationRequested = true;
+                _ = EnrichReputationAsync(track);
+            }
+
+            alerts.Add(new UrlAlertRow(
+                alertKey,
+                track.Host,
+                track.Url,
+                track.Process,
+                score.ToString(CultureInfo.InvariantCulture),
+                UrlCategories.Label(category),
+                SeverityBrushes.For(category),
+                assessment.Reasons,
+                $"{track.FirstSeen:HH:mm} · {track.Hits}×",
+                track.Reputation is null ? string.Empty : $"VT {track.Reputation.Malicious}/{track.Reputation.Total}",
+                track.Reputation?.Detail ?? string.Empty));
+        }
+
+        RowSync.Apply(UrlFindings, findings, row => row.Key);
+        RowSync.Apply(UrlAlerts, alerts, row => row.Key);
+
+        AnalyzedUrlCount = findings.Count;
+        SuspiciousUrlCount = findings.Count(row => row.IsSuspicious);
+
+        UrlScanSummary = findings.Count == 0
+            ? "No browser page seen yet — open one and DoorNet scores it within a few seconds."
+            : $"{findings.Count} addresses · {danger} danger · {suspicious} suspicious · {watch} watch · {findings.Count - danger - suspicious - watch} safe";
+
+        OnPropertyChanged(nameof(HasUrlAlerts));
+        OnPropertyChanged(nameof(AlertsTabLabel));
+        OnPropertyChanged(nameof(UrlAlertsSummary));
+        OnPropertyChanged(nameof(UrlScanSummary));
+    }
+
+    /// <summary>Samples the socket tables on a short cadence so brief transfers still appear.</summary>
+    private async Task SampleTrafficAsync()
+    {
+        if (_trafficSampling || _disposed || !_isCapturing)
+            return;
+
+        _trafficSampling = true;
+        try
+        {
+            var snapshot = await Task.Run(_connectionSource.Snapshot).ConfigureAwait(true);
+            MergeTraffic(snapshot, rebuild: false);
+        }
+        catch (Exception)
+        {
+            // Adapters come and go; the next sample retries.
+        }
+        finally
+        {
+            _trafficSampling = false;
+        }
+    }
+
+    private void MergeTraffic(IReadOnlyList<ConnectionInfo> connections, bool rebuild)
+    {
+        var now = DateTimeOffset.Now;
+
+        foreach (var connection in connections)
+        {
+            var key = connection.Key;
+            _recentTraffic[key] = _recentTraffic.TryGetValue(key, out var previous)
+                ? previous with { LastSeen = now }
+                : new RecentTraffic(connection, now);
+        }
+
+        var cutoff = now - TrafficRetention;
+        foreach (var key in _recentTraffic.Where(pair => pair.Value.LastSeen < cutoff).Select(pair => pair.Key).ToList())
+            _recentTraffic.Remove(key);
+
+        if (rebuild)
+            RebuildTraffic();
+    }
+
+    /// <summary>One list for everything: scored pages, every live socket, and the ICMP counters.</summary>
+    private void RebuildTraffic()
+    {
+        var rows = new List<TrafficRow>(_recentTraffic.Count + _urlTracks.Count + 1);
+        var danger = 0;
+        var suspicious = 0;
+        var watch = 0;
+
+        foreach (var track in _urlTracks.Values)
+        {
+            if (track.Assessment is not { } assessment)
+                continue;
+
+            var score = Math.Min(100, assessment.Score + (track.Reputation?.Weight ?? 0));
+            var category = assessment.IsExempt ? UrlCategory.Safe : UrlCategories.For(score);
+
+            switch (category)
+            {
+                case UrlCategory.Danger:
+                    danger++;
+                    break;
+                case UrlCategory.Suspicious:
+                    suspicious++;
+                    break;
+                case UrlCategory.Watch:
+                    watch++;
+                    break;
+            }
+
+            rows.Add(new TrafficRow(
+                "page|" + track.Process + "|" + track.Url,
+                UrlCategories.Label(category),
+                SeverityBrushes.For(category),
+                track.Process,
+                "Out",
+                track.Url.StartsWith("https", StringComparison.OrdinalIgnoreCase) ? "HTTPS" : "HTTP",
+                track.Host,
+                "page",
+                track.Url,
+                score.ToString(CultureInfo.InvariantCulture),
+                track.LastSeen.ToString("HH:mm:ss", CultureInfo.CurrentCulture),
+                category is UrlCategory.Danger or UrlCategory.Suspicious));
+        }
+
+        foreach (var entry in _recentTraffic.Values.OrderByDescending(item => item.LastSeen).Take(400))
+        {
+            var connection = entry.Connection;
+
+            // The process cache prefers the friendly description ("The curl executable");
+            // the traffic list wants the file name people actually type.
+            var agent = Path.GetFileName(connection.ExecutablePath);
+            if (string.IsNullOrWhiteSpace(agent))
+                agent = connection.ProcessName;
+
+            rows.Add(new TrafficRow(
+                "sock|" + connection.Key,
+                "Live",
+                SeverityBrushes.Low,
+                agent,
+                DirectionOf(connection),
+                connection.ProtocolLabel,
+                connection.IsListening
+                    ? (connection.LocalAddress is "0.0.0.0" or "::" or "[::]"
+                        ? $"*:{connection.LocalPort}"
+                        : $"{connection.LocalAddress}:{connection.LocalPort}")
+                    : connection.RemoteEndpoint,
+                connection.State,
+                $"pid {connection.ProcessId}",
+                string.Empty,
+                string.Empty,
+                false));
+        }
+
+        var icmp = LocalTrafficStats.ReadIcmp();
+        rows.Add(new TrafficRow(
+            "icmp",
+            "Info",
+            SeverityBrushes.Low,
+            "icmp",
+            "In/Out",
+            "ICMP",
+            "echo",
+            "—",
+            icmp.HasActivity ? icmp.Summary : "no echo traffic yet",
+            string.Empty,
+            string.Empty,
+            false));
+
+        // DoorNet itself, so the app is visible here like any other agent.
+        var selfPath = Environment.ProcessPath;
+        if (!string.IsNullOrWhiteSpace(selfPath))
+        {
+            rows.Add(new TrafficRow(
+                "self",
+                "App",
+                SeverityBrushes.Medium,
+                Path.GetFileName(selfPath),
+                "—",
+                "—",
+                "this app",
+                "running",
+                selfPath,
+                string.Empty,
+                string.Empty,
+                false));
+        }
+
+        var ordered = rows
+            .OrderBy(row => RankOf(row.Tag))
+            .ThenByDescending(row => ParseScore(row.ScoreText))
+            .ToList();
+
+        _allTraffic = ordered;
+        RebuildProtocolFilters();
+        ApplyTrafficFilter();
+
+        OnPropertyChanged(nameof(HasTraffic));
+
+        TrafficSummary = $"{_recentTraffic.Count} sockets · {_urlTracks.Count} pages · " +
+                         $"{danger} danger · {suspicious} suspicious · {watch} watch";
+        IcmpSummary = icmp.HasActivity ? icmp.Summary : "no ICMP echo traffic seen yet";
+    }
+
+    /// <summary>Offers All plus whichever protocols are actually present right now.</summary>
+    private void RebuildProtocolFilters()
+    {
+        var options = new List<ProtocolFilterOption>
+        {
+            new("all", "All", _allTraffic.Count)
+        };
+
+        Add("TCP", "TCP");
+        Add("UDP", "UDP");
+        Add("ICMP", "ICMP");
+        Add("web", "Web");
+
+        if (options.All(option => option.Key != _selectedFilterKey))
+            _selectedFilterKey = "all";
+
+        ProtocolFilters.Clear();
+        foreach (var option in options)
+            ProtocolFilters.Add(option);
+
+        OnPropertyChanged(nameof(ProtocolFilterLabel));
+        return;
+
+        void Add(string key, string label)
+        {
+            var count = _allTraffic.Count(row => key == "web"
+                ? row.Protocol is "HTTP" or "HTTPS"
+                : row.Protocol == key);
+
+            if (count > 0)
+                options.Add(new ProtocolFilterOption(key, label, count));
+        }
+    }
+
+    private void SelectProtocolFilter(object? parameter)
+    {
+        if (parameter is not ProtocolFilterOption option)
+            return;
+
+        _selectedFilterKey = option.Key;
+        OnPropertyChanged(nameof(ProtocolFilterLabel));
+        ApplyTrafficFilter();
+    }
+
+    private void ApplyTrafficFilter()
+    {
+        var visible = _selectedFilterKey == "all"
+            ? _allTraffic
+            : _allTraffic.Where(row => _selectedFilterKey == "web"
+                ? row.Protocol is "HTTP" or "HTTPS"
+                : row.Protocol == _selectedFilterKey).ToList();
+
+        RowSync.Apply(Traffic, visible, row => row.Key);
+    }
+
+
+    private static int RankOf(string tag) => tag switch
+    {
+        "Danger" => 0,
+        "Suspicious" => 1,
+        "Watch" => 2,
+        "Safe" => 3,
+        "Live" => 4,
+        "App" => 5,
+        _ => 6
+    };
+
+    private static int ParseScore(string text) => int.TryParse(text, out var score) ? score : -1;
+
+    private static string DirectionOf(ConnectionInfo connection)
+    {
+        if (connection.IsListening)
+            return "Listen";
+
+        if (connection.Protocol == TransportProtocol.Udp)
+            return connection.RemotePort == 0 ? "Listen" : "Out";
+
+        return connection.LocalPort >= 32768 ? "Out" : "In";
+    }
+
+    private sealed record RecentTraffic(ConnectionInfo Connection, DateTimeOffset LastSeen);
+
+    private void DismissAlert(object? parameter)    {
+        if (parameter is not UrlAlertRow alert)
+            return;
+
+        _dismissedAlerts.Add(alert.Key);
+        RebuildThreatRows();
+    }
+
+    private void WhitelistAlert(object? parameter)
+    {
+        if (parameter is not UrlAlertRow alert)
+            return;
+
+        _allowedHosts.Add(alert.Host);
+        _dismissedAlerts.Add(alert.Key);
+        SettingsStore.WhitelistHost(alert.Host);
+        LoadWhitelistedHosts();
+        RebuildThreatRows();
+    }
+
+    private void CopyAlert(object? parameter)
+    {
+        if (parameter is not UrlAlertRow alert)
+            return;
+
+        var text = string.Join(
+            Environment.NewLine,
+            $"{alert.SeverityText} ({alert.ScoreText})  {alert.Host}",
+            $"URL: {alert.Url}",
+            $"Process: {alert.Process}",
+            $"Seen: {alert.SeenText}",
+            $"Why: {alert.Reasons}");
+
+        try
+        {
+            Clipboard.SetText(text);
+        }
+        catch (Exception ex) when (ex is System.Runtime.InteropServices.COMException or InvalidOperationException)
+        {
+            // Clipboard was locked by another process; the user can retry.
+        }
+    }
+
+    private static string AlertKeyFor(string process, string host) => process + "|" + host;
+
+    private void LoadWhitelistedHosts()
+    {
+        WhitelistedHosts.Clear();
+        foreach (var host in _allowedHosts.OrderBy(value => value, StringComparer.OrdinalIgnoreCase))
+            WhitelistedHosts.Add(host);
+
+        OnPropertyChanged(nameof(HasWhitelistedHosts));
+    }
+
+    private void RemoveWhitelistedHost(object? parameter)
+    {
+        if (parameter is not string host)
+            return;
+
+        _allowedHosts.Remove(host);
+        SettingsStore.RemoveWhitelistedHost(host);
+        LoadWhitelistedHosts();
+        RebuildThreatRows();
+    }
+
+    /// <summary>Only real, public targets are sent to a third party.</summary>
+    private static bool IsPublicHost(string host)
+    {
+        if (string.IsNullOrWhiteSpace(host))
+            return false;
+
+        if (!System.Net.IPAddress.TryParse(host.Trim('[', ']'), out var address))
+            return !host.Equals("localhost", StringComparison.OrdinalIgnoreCase)
+                   && !host.EndsWith(".local", StringComparison.OrdinalIgnoreCase)
+                   && !host.EndsWith(".lan", StringComparison.OrdinalIgnoreCase)
+                   && !host.EndsWith(".internal", StringComparison.OrdinalIgnoreCase);
+
+        if (address.IsIPv6LinkLocal || address.IsIPv6SiteLocal || System.Net.IPAddress.IsLoopback(address))
+            return false;
+
+        var bytes = address.GetAddressBytes();
+        return bytes.Length != 4
+               || (bytes[0] != 10
+                   && !(bytes[0] == 192 && bytes[1] == 168)
+                   && !(bytes[0] == 172 && bytes[1] >= 16 && bytes[1] <= 31)
+                   && !(bytes[0] == 169 && bytes[1] == 254));
+    }
+
+    private void SaveApiKey()
+    {
+        var key = (ApiKeyInput ?? string.Empty).Trim();
+        if (key.Length < 16)
+        {
+            ApiKeyInput = string.Empty;
+            OnPropertyChanged(nameof(ReputationStatusText));
+            return;
+        }
+
+        SettingsStore.SaveApiKey(key);
+        _reputation.Configure(key);
+        ApiKeyInput = string.Empty;
+
+        // A key arriving mid-session should score what is already on screen.
+        foreach (var track in _urlTracks.Values)
+            track.ReputationRequested = false;
+
+        OnPropertyChanged(nameof(ReputationStatusText));
+        OnPropertyChanged(nameof(IsReputationAvailable));
+        RebuildThreatRows();
+    }
+
+    private void ClearApiKey()
+    {
+        SettingsStore.SaveApiKey(null);
+        _reputation.Configure(null);
+        ApiKeyInput = string.Empty;
+
+        OnPropertyChanged(nameof(ReputationStatusText));
+        OnPropertyChanged(nameof(IsReputationAvailable));
+    }
+
+    private async Task EnrichReputationAsync(UrlTrack track)
+    {
+        try
+        {
+            var reputation = await _reputation.LookupAsync(track.Host).ConfigureAwait(true);
+
+            if (reputation is null)
+            {
+                // Allow a later retry, and keep the UI honest when the key is rejected.
+                track.ReputationRequested = false;
+                OnPropertyChanged(nameof(ReputationStatusText));
+                return;
+            }
+
+            // Cleared only on failure: a cached hit completes synchronously, and leaving the
+            // flag set keeps the rebuild below from asking for the same host again.
+            track.Reputation = reputation;
+
+            Reputations.Insert(0, new ReputationRow(
+                reputation.Target,
+                reputation.Summary,
+                reputation.Detail,
+                DateTime.Now.ToString("HH:mm:ss", CultureInfo.CurrentCulture),
+                SeverityBrushes.For(reputation.Severity)));
+
+            while (Reputations.Count > 40)
+                Reputations.RemoveAt(Reputations.Count - 1);
+
+            OnPropertyChanged(nameof(ReputationStatusText));
+            RebuildThreatRows();
+        }
+        catch (Exception)
+        {
+            track.ReputationRequested = false;
+        }
+    }
+
+    /// <summary>One address as it was seen, keeping the worst verdict for the session.</summary>
+    private sealed class UrlTrack
+    {
+        public required string Url { get; init; }
+        public required string Host { get; init; }
+        public required string Process { get; init; }
+        public DateTimeOffset FirstSeen { get; init; }
+        public DateTimeOffset LastSeen { get; set; }
+        public int Hits { get; set; }
+        public UrlAssessment? Assessment { get; set; }
+        public ThreatReputation? Reputation { get; set; }
+        public bool ReputationRequested { get; set; }
+    }
+
+    private void ResetSession()    {
         _sampler.Reset();
         _history.Clear();
         _usageTotals.Clear();
@@ -1105,10 +1827,12 @@ public sealed class MainViewModel : ObservableObject, IDisposable
 
         _disposed = true;
         _timer.Stop();
+        _trafficTimer.Stop();
         (_perAppSource as IDisposable)?.Dispose();
         _tabProbeCts.Cancel();
         _tabProbeCts.Dispose();
         _geo.Dispose();
         _macVendors.Dispose();
+        _reputation.Dispose();
     }
 }

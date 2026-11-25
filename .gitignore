@@ -2,6 +2,7 @@
 bin/
 obj/
 artifacts/
+artifacts[0-9]*/
 .vs/
 
 # User/IDE files
@@ -17,5 +18,9 @@ coverage*.json
 # Reference material: large installers and Ghidra exports, not source
 reverse.eng/
 
+# Local secrets (VirusTotal key)
+.env
+
 # Local screenshots
 *.tmp.png
+.env

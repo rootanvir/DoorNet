@@ -158,6 +158,44 @@
 
 
     <!-- Header tabs -->
+    <!-- Icon colour follows the tab's checked state, so each icon can be a glyph or a drawing. -->
+    <Style x:Key="HeaderIconGlyph" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource GlyphFont}" />
+        <Setter Property="FontSize" Value="13" />
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+                <Setter Property="Foreground" Value="{DynamicResource DownloadBrush}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <Style x:Key="HeaderIconStroke" TargetType="Path">
+        <Setter Property="Stroke" Value="{DynamicResource TextSecondaryBrush}" />
+        <Setter Property="StrokeThickness" Value="1.5" />
+        <Setter Property="StrokeStartLineCap" Value="Round" />
+        <Setter Property="StrokeEndLineCap" Value="Round" />
+        <Setter Property="StrokeLineJoin" Value="Round" />
+        <Style.Triggers>
+            <DataTrigger Binding="{Binding IsChecked, RelativeSource={RelativeSource AncestorType=RadioButton}}" Value="True">
+                <Setter Property="Stroke" Value="{DynamicResource DownloadBrush}" />
+            </DataTrigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Cut-out around the magnifier so the globe strokes stop behind the lens. -->
+    <CombinedGeometry x:Key="ScannerIconCut" GeometryCombineMode="Exclude">
+        <CombinedGeometry.Geometry1>
+            <RectangleGeometry Rect="0,0,17,17" />
+        </CombinedGeometry.Geometry1>
+        <CombinedGeometry.Geometry2>
+            <GeometryGroup>
+                <EllipseGeometry Center="6,11.2" RadiusX="3.9" RadiusY="3.9" />
+                <RectangleGeometry Rect="7.6,12.8,4.2,3.6" />
+            </GeometryGroup>
+        </CombinedGeometry.Geometry2>
+    </CombinedGeometry>
+
     <Style x:Key="HeaderTab" TargetType="RadioButton">
         <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
         <Setter Property="FontSize" Value="12" />
@@ -173,12 +211,10 @@
                             Padding="11,7"
                             Margin="0,0,4,0">
                         <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
-                            <TextBlock x:Name="Icon"
-                                       Text="{TemplateBinding Tag}"
-                                       FontFamily="{StaticResource GlyphFont}"
-                                       FontSize="13"
-                                       Margin="0,0,8,0"
-                                       VerticalAlignment="Center" />
+                            <ContentPresenter x:Name="Icon"
+                                              ContentSource="Tag"
+                                              Margin="0,0,8,0"
+                                              VerticalAlignment="Center" />
                             <ContentPresenter VerticalAlignment="Center" />
                         </StackPanel>
                     </Border>
@@ -189,7 +225,6 @@
                         <Trigger Property="IsChecked" Value="True">
                             <Setter TargetName="Root" Property="Background" Value="{DynamicResource SubtlePillBrush}" />
                             <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
-                            <Setter TargetName="Icon" Property="Foreground" Value="{DynamicResource DownloadBrush}" />
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -492,6 +527,64 @@
 
     <Style x:Key="CellTextStrong" TargetType="TextBlock" BasedOn="{StaticResource CellText}">
         <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+    </Style>
+
+    <!--
+        Read-only text that reads like a label but behaves like text: the pointer turns
+        into an I-beam and the value can be dragged over and copied with Ctrl+C.
+        Used for addresses, MACs, ports and other identity values.
+    -->
+    <Style x:Key="SelectableText" TargetType="TextBox">
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="BorderThickness" Value="0" />
+        <Setter Property="Padding" Value="0" />
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        <Setter Property="IsReadOnly" Value="True" />
+        <Setter Property="IsReadOnlyCaretVisible" Value="False" />
+        <Setter Property="IsTabStop" Value="False" />
+        <Setter Property="Cursor" Value="IBeam" />
+        <Setter Property="TextWrapping" Value="NoWrap" />
+        <Setter Property="VerticalAlignment" Value="Center" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
+        <Setter Property="FocusVisualStyle" Value="{x:Null}" />
+        <Setter Property="SelectionBrush" Value="{DynamicResource TextSelectionBrush}" />
+        <Setter Property="SelectionOpacity" Value="1" />
+        <Style.Triggers>
+            <!--
+                WPF draws the selection over the glyphs and ignores SelectionTextBrush here,
+                so the value could be read against the highlight only in a bright tone.
+                Muted values therefore step up to the primary colour while focused.
+            -->
+            <Trigger Property="IsKeyboardFocused" Value="True">
+                <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Selectable value in the secondary tone. -->
+    <Style x:Key="SelectableSecondary" TargetType="TextBox" BasedOn="{StaticResource SelectableText}">
+        <Setter Property="Foreground" Value="{DynamicResource TextSecondaryBrush}" />
+    </Style>
+
+    <!-- Selectable value in the muted caption tone. -->
+    <Style x:Key="SelectableCaption" TargetType="TextBox" BasedOn="{StaticResource SelectableText}">
+        <Setter Property="FontSize" Value="11" />
+        <Setter Property="Foreground" Value="{DynamicResource TextMutedBrush}" />
+    </Style>
+
+    <!-- Text input used by settings fields -->
+    <Style x:Key="Input" TargetType="TextBox">
+        <Setter Property="Background" Value="{DynamicResource SurfaceAltBrush}" />
+        <Setter Property="Foreground" Value="{DynamicResource TextPrimaryBrush}" />
+        <Setter Property="BorderBrush" Value="{DynamicResource LineBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="Padding" Value="8,5" />
+        <Setter Property="FontFamily" Value="{StaticResource UiFont}" />
+        <Setter Property="FontSize" Value="11.5" />
+        <Setter Property="CaretBrush" Value="{DynamicResource TextPrimaryBrush}" />
+        <Setter Property="SelectionBrush" Value="{DynamicResource TextSelectionBrush}" />
+        <Setter Property="VerticalContentAlignment" Value="Center" />
     </Style>
 
     <!-- Data grid -->

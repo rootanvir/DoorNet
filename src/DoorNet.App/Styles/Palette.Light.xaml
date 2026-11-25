@@ -45,6 +45,8 @@
     <SolidColorBrush x:Key="GridAltBrush" Color="#F7FAFC" />
     <SolidColorBrush x:Key="RowHoverBrush" Color="#EDF3F9" />
     <SolidColorBrush x:Key="RowSelectedBrush" Color="#E1EBF5" />
+    <!-- Translucent: WPF paints the selection over the glyphs, so it must let them show through. -->
+    <SolidColorBrush x:Key="TextSelectionBrush" Color="#660078D4" />
 
     <SolidColorBrush x:Key="ScrollThumbBrush" Color="#C1CFDB" />
 

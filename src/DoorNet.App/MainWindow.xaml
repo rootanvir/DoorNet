@@ -44,18 +44,88 @@
                                  GroupName="NavTabs"
                                  IsChecked="True"
                                  Style="{StaticResource HeaderTab}"
-                                 Tag="&#xE9D9;"
-                                 Content="Monitor" />
+                                 Content="Monitor">
+                        <RadioButton.Tag>
+                            <TextBlock Text="&#xE9D9;" Style="{StaticResource HeaderIconGlyph}" />
+                        </RadioButton.Tag>
+                    </RadioButton>
                     <RadioButton x:Name="ScannerTab"
                                  GroupName="NavTabs"
                                  Style="{StaticResource HeaderTab}"
-                                 Tag="&#xE721;"
-                                 Content="Scanner" />
+                                 Content="Scanner">
+                        <RadioButton.Tag>
+                            <!-- Globe with a magnifier in front of it, drawn so the globe strokes
+                                 stop behind the lens instead of running through it. -->
+                            <Canvas Width="17" Height="17" VerticalAlignment="Center">
+                                <Path Style="{StaticResource HeaderIconStroke}" Clip="{StaticResource ScannerIconCut}">
+                                    <Path.Data>
+                                        <EllipseGeometry Center="10.4,7.8" RadiusX="5" RadiusY="5" />
+                                    </Path.Data>
+                                </Path>
+                                <Path Style="{StaticResource HeaderIconStroke}" Clip="{StaticResource ScannerIconCut}">
+                                    <Path.Data>
+                                        <EllipseGeometry Center="10.4,7.8" RadiusX="2.3" RadiusY="5" />
+                                    </Path.Data>
+                                </Path>
+                                <Path Style="{StaticResource HeaderIconStroke}" Clip="{StaticResource ScannerIconCut}">
+                                    <Path.Data>
+                                        <LineGeometry StartPoint="5.4,7.8" EndPoint="15.4,7.8" />
+                                    </Path.Data>
+                                </Path>
+
+                                <Path Style="{StaticResource HeaderIconStroke}" StrokeThickness="1.6">
+                                    <Path.Data>
+                                        <EllipseGeometry Center="6,11.2" RadiusX="2.7" RadiusY="2.7" />
+                                    </Path.Data>
+                                </Path>
+                                <Path Style="{StaticResource HeaderIconStroke}" StrokeThickness="1.8">
+                                    <Path.Data>
+                                        <LineGeometry StartPoint="8,13.2" EndPoint="10.4,15.6" />
+                                    </Path.Data>
+                                </Path>
+                            </Canvas>
+                        </RadioButton.Tag>
+                    </RadioButton>
+                    <RadioButton x:Name="TrafficTab"
+                                 GroupName="NavTabs"
+                                 Style="{StaticResource HeaderTab}"
+                                 Content="Traffic">
+                        <RadioButton.Tag>
+                            <TextBlock Text="&#xE968;" Style="{StaticResource HeaderIconGlyph}" />
+                        </RadioButton.Tag>
+                    </RadioButton>
+                    <RadioButton x:Name="AlertsTab"
+                                 GroupName="NavTabs"
+                                 Style="{StaticResource HeaderTab}"
+                                 Content="{Binding AlertsTabLabel}">
+                        <RadioButton.Tag>
+                            <TextBlock Text="&#xEA8F;" Style="{StaticResource HeaderIconGlyph}" />
+                        </RadioButton.Tag>
+                    </RadioButton>
+                    <RadioButton x:Name="RulesTab"
+                                 GroupName="NavTabs"
+                                 Style="{StaticResource HeaderTab}"
+                                 Content="Rules">
+                        <RadioButton.Tag>
+                            <TextBlock Text="&#xE9D5;" Style="{StaticResource HeaderIconGlyph}" />
+                        </RadioButton.Tag>
+                    </RadioButton>
                     <RadioButton x:Name="ActionsTab"
                                  GroupName="NavTabs"
                                  Style="{StaticResource HeaderTab}"
-                                 Tag="&#xE945;"
-                                 Content="Actions" />
+                                 Content="Actions">
+                        <RadioButton.Tag>
+                            <TextBlock Text="&#xE945;" Style="{StaticResource HeaderIconGlyph}" />
+                        </RadioButton.Tag>
+                    </RadioButton>
+                    <RadioButton x:Name="SettingsTab"
+                                 GroupName="NavTabs"
+                                 Style="{StaticResource HeaderTab}"
+                                 Content="Settings">
+                        <RadioButton.Tag>
+                            <TextBlock Text="&#xE713;" Style="{StaticResource HeaderIconGlyph}" />
+                        </RadioButton.Tag>
+                    </RadioButton>
                 </StackPanel>
 
                 <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
@@ -948,9 +1018,9 @@
                                                         </StackPanel>
                                                     </Grid>
 
-                                                    <TextBlock Grid.Column="1" Text="{Binding ProtocolSummary}" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,12,0" />
-                                                    <TextBlock Grid.Column="2" Text="{Binding LocalSummary}" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,12,0" />
-                                                    <TextBlock Grid.Column="3" Text="{Binding RemoteSummary}" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" VerticalAlignment="Center" TextTrimming="CharacterEllipsis" Margin="0,0,12,0" />
+                                                    <TextBox Grid.Column="1" Text="{Binding ProtocolSummary, Mode=OneWay}" Style="{StaticResource SelectableSecondary}" FontSize="10.5" Margin="0,0,12,0" />
+                                                    <TextBox Grid.Column="2" Text="{Binding LocalSummary, Mode=OneWay}" Style="{StaticResource SelectableSecondary}" FontSize="10.5" Margin="0,0,12,0" />
+                                                    <TextBox Grid.Column="3" Text="{Binding RemoteSummary, Mode=OneWay}" Style="{StaticResource SelectableSecondary}" FontSize="10.5" Margin="0,0,12,0" />
                                                     <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
                                                         <Ellipse Width="5" Height="5" Fill="{Binding StateBrush}" Margin="0,0,5,0" VerticalAlignment="Center" />
                                                         <TextBlock Text="{Binding StateSummary}" FontSize="10" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" />
@@ -987,9 +1057,9 @@
                                                                            VerticalAlignment="Center" />
                                                             </StackPanel>
 
-                                                            <TextBlock Grid.Column="1" Text="{Binding Protocol}" FontSize="10.5" Foreground="{DynamicResource TextMutedBrush}" VerticalAlignment="Center" Margin="0,0,12,0" />
-                                                            <TextBlock Grid.Column="2" Text="{Binding Local}" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,12,0" />
-                                                            <TextBlock Grid.Column="3" Text="{Binding Remote}" FontSize="10.5" Foreground="{DynamicResource TextSecondaryBrush}" TextTrimming="CharacterEllipsis" VerticalAlignment="Center" Margin="0,0,12,0" />
+                                                            <TextBox Grid.Column="1" Text="{Binding Protocol, Mode=OneWay}" Style="{StaticResource SelectableCaption}" FontSize="10.5" Margin="0,0,12,0" />
+                                                            <TextBox Grid.Column="2" Text="{Binding Local, Mode=OneWay}" Style="{StaticResource SelectableSecondary}" FontSize="10.5" Margin="0,0,12,0" />
+                                                            <TextBox Grid.Column="3" Text="{Binding Remote, Mode=OneWay}" Style="{StaticResource SelectableSecondary}" FontSize="10.5" Margin="0,0,12,0" />
 
                                                             <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center">
                                                                 <Ellipse Width="5" Height="5" Fill="{Binding StateBrush}" VerticalAlignment="Center" Margin="0,0,5,0" />
@@ -1082,62 +1152,54 @@
 
                             <StackPanel Grid.Column="0" Margin="0,0,14,0">
                                 <TextBlock Text="NETWORK" Style="{StaticResource TileLabel}" FontSize="9.5" />
-                                <TextBlock Text="{Binding LocalNetworkName}"
-                                           FontSize="12"
-                                           FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextPrimaryBrush}"
-                                           TextTrimming="CharacterEllipsis"
-                                           Margin="0,3,0,0" />
-                                <TextBlock Text="{Binding LocalNetworkDetail}"
-                                           Style="{StaticResource Caption}"
-                                           FontSize="10"
-                                           TextTrimming="CharacterEllipsis"
-                                           Margin="0,2,0,0" />
+                                <TextBox Text="{Binding LocalNetworkName, Mode=OneWay}"
+                                         Style="{StaticResource SelectableText}"
+                                         FontSize="12"
+                                         FontWeight="SemiBold"
+                                         Margin="0,3,0,0" />
+                                <TextBox Text="{Binding LocalNetworkDetail, Mode=OneWay}"
+                                         Style="{StaticResource SelectableCaption}"
+                                         FontSize="10"
+                                         Margin="0,2,0,0" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="1" Margin="0,0,14,0">
                                 <TextBlock Text="ROUTER" Style="{StaticResource TileLabel}" FontSize="9.5" />
-                                <TextBlock Text="{Binding LocalRouterText}"
-                                           FontSize="12"
-                                           FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextPrimaryBrush}"
-                                           TextTrimming="CharacterEllipsis"
-                                           Margin="0,3,0,0" />
-                                <TextBlock Text="{Binding LocalRouterDetail}"
-                                           Style="{StaticResource Caption}"
-                                           FontSize="10"
-                                           TextTrimming="CharacterEllipsis"
-                                           Margin="0,2,0,0" />
+                                <TextBox Text="{Binding LocalRouterText, Mode=OneWay}"
+                                         Style="{StaticResource SelectableText}"
+                                         FontSize="12"
+                                         FontWeight="SemiBold"
+                                         Margin="0,3,0,0" />
+                                <TextBox Text="{Binding LocalRouterDetail, Mode=OneWay}"
+                                         Style="{StaticResource SelectableCaption}"
+                                         FontSize="10"
+                                         Margin="0,2,0,0" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="2" Margin="0,0,14,0">
                                 <TextBlock Text="PUBLIC IP" Style="{StaticResource TileLabel}" FontSize="9.5" />
-                                <TextBlock Text="{Binding LocalPublicIpText}"
-                                           FontSize="12"
-                                           FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextPrimaryBrush}"
-                                           TextTrimming="CharacterEllipsis"
-                                           Margin="0,3,0,0" />
-                                <TextBlock Text="{Binding LocalIspText}"
-                                           Style="{StaticResource Caption}"
-                                           FontSize="10"
-                                           TextTrimming="CharacterEllipsis"
-                                           Margin="0,2,0,0" />
+                                <TextBox Text="{Binding LocalPublicIpText, Mode=OneWay}"
+                                         Style="{StaticResource SelectableText}"
+                                         FontSize="12"
+                                         FontWeight="SemiBold"
+                                         Margin="0,3,0,0" />
+                                <TextBox Text="{Binding LocalIspText, Mode=OneWay}"
+                                         Style="{StaticResource SelectableCaption}"
+                                         FontSize="10"
+                                         Margin="0,2,0,0" />
                             </StackPanel>
 
                             <StackPanel Grid.Column="3">
                                 <TextBlock Text="THIS DEVICE" Style="{StaticResource TileLabel}" FontSize="9.5" />
-                                <TextBlock Text="{Binding LocalHostText}"
-                                           FontSize="12"
-                                           FontWeight="SemiBold"
-                                           Foreground="{DynamicResource TextPrimaryBrush}"
-                                           TextTrimming="CharacterEllipsis"
-                                           Margin="0,3,0,0" />
-                                <TextBlock Text="{Binding LocalHostDetail}"
-                                           Style="{StaticResource Caption}"
-                                           FontSize="10"
-                                           TextTrimming="CharacterEllipsis"
-                                           Margin="0,2,0,0" />
+                                <TextBox Text="{Binding LocalHostText, Mode=OneWay}"
+                                         Style="{StaticResource SelectableText}"
+                                         FontSize="12"
+                                         FontWeight="SemiBold"
+                                         Margin="0,3,0,0" />
+                                <TextBox Text="{Binding LocalHostDetail, Mode=OneWay}"
+                                         Style="{StaticResource SelectableCaption}"
+                                         FontSize="10"
+                                         Margin="0,2,0,0" />
                             </StackPanel>
                         </Grid>
                     </Border>
@@ -1214,19 +1276,17 @@
                                                            VerticalAlignment="Center"
                                                            Margin="0,0,10,0" />
 
-                                                <TextBlock Grid.Column="2"
-                                                           Text="{Binding Ip}"
-                                                           FontSize="11"
-                                                           Foreground="{DynamicResource TextSecondaryBrush}"
-                                                           VerticalAlignment="Center"
-                                                           Margin="0,0,10,0" />
+                                                <TextBox Grid.Column="2"
+                                                         Text="{Binding Ip, Mode=OneWay}"
+                                                         Style="{StaticResource SelectableSecondary}"
+                                                         FontSize="11"
+                                                         Margin="0,0,10,0" />
 
-                                                <TextBlock Grid.Column="3"
-                                                           Text="{Binding Mac}"
-                                                           FontSize="10.5"
-                                                           Foreground="{DynamicResource TextMutedBrush}"
-                                                           VerticalAlignment="Center"
-                                                           Margin="0,0,10,0" />
+                                                <TextBox Grid.Column="3"
+                                                         Text="{Binding Mac, Mode=OneWay}"
+                                                         Style="{StaticResource SelectableCaption}"
+                                                         FontSize="10.5"
+                                                         Margin="0,0,10,0" />
 
                                                 <TextBlock Grid.Column="4"
                                                            Text="{Binding System}"
@@ -1244,13 +1304,11 @@
                                                            VerticalAlignment="Center"
                                                            Margin="0,0,10,0" />
 
-                                                <TextBlock Grid.Column="6"
-                                                           Text="{Binding Ports}"
-                                                           FontSize="10.5"
-                                                           Foreground="{DynamicResource TextMutedBrush}"
-                                                           TextTrimming="CharacterEllipsis"
-                                                           VerticalAlignment="Center"
-                                                           Margin="0,0,10,0" />
+                                                <TextBox Grid.Column="6"
+                                                         Text="{Binding Ports, Mode=OneWay}"
+                                                         Style="{StaticResource SelectableCaption}"
+                                                         FontSize="10.5"
+                                                         Margin="0,0,10,0" />
 
                                                 <TextBlock Grid.Column="7"
                                                            Text="{Binding Latency}"
@@ -1337,6 +1395,565 @@
                 </Border>
             </Grid>
 
+            <!-- Traffic: every socket, split by protocol, plus the ICMP counters -->
+            <Grid Margin="20,16,20,14"
+                  Visibility="{Binding IsChecked, ElementName=TrafficTab, Converter={StaticResource BoolToVis}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Text="Traffic" Style="{StaticResource SectionTitle}" FontSize="17" />
+                        <TextBlock Text="{Binding TrafficSummary}"
+                                   Style="{StaticResource Caption}"
+                                   Margin="0,4,0,0" />
+                    </StackPanel>
+
+                    <Border Background="{DynamicResource SubtlePillBrush}"
+                            CornerRadius="5"
+                            Padding="8,2"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Top"
+                            ToolTip="The socket tables do not list ICMP, and per-peer pings need a packet driver. These are the machine-wide echo counters.">
+                        <TextBlock Text="{Binding IcmpSummary}"
+                                   FontSize="10"
+                                   Foreground="{DynamicResource TextMutedBrush}" />
+                    </Border>
+                </Grid>
+
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Margin="0,12,0,0">
+                    <TextBlock Text="Protocol"
+                               Style="{StaticResource Caption}"
+                               VerticalAlignment="Center"
+                               Margin="0,0,8,0" />
+                    <Button Style="{StaticResource GhostButton}"
+                            Padding="12,4"
+                            FontSize="11"
+                            Content="{Binding ProtocolFilterLabel}"
+                            Tag="{Binding}"
+                            Click="OpenFilterMenu">
+                        <Button.ContextMenu>
+                            <ContextMenu ItemsSource="{Binding PlacementTarget.DataContext.ProtocolFilters, RelativeSource={RelativeSource Self}}">
+                                <ContextMenu.ItemContainerStyle>
+                                    <Style TargetType="MenuItem" BasedOn="{StaticResource {x:Type MenuItem}}">
+                                        <Setter Property="Header" Value="{Binding Display}" />
+                                        <Setter Property="Command"
+                                                Value="{Binding PlacementTarget.Tag.SelectProtocolFilterCommand, RelativeSource={RelativeSource AncestorType=ContextMenu}}" />
+                                        <Setter Property="CommandParameter" Value="{Binding}" />
+                                    </Style>
+                                </ContextMenu.ItemContainerStyle>
+                            </ContextMenu>
+                        </Button.ContextMenu>
+                    </Button>
+                </StackPanel>
+
+                <Border Grid.Row="2"
+                        Margin="0,12,0,0"
+                        Padding="0,0,0,6"
+                        BorderBrush="{DynamicResource LineSoftBrush}"
+                        BorderThickness="0,0,0,1">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="92" />
+                            <ColumnDefinition Width="140" />
+                            <ColumnDefinition Width="64" />
+                            <ColumnDefinition Width="70" />
+                            <ColumnDefinition Width="*" />
+                            <ColumnDefinition Width="96" />
+                            <ColumnDefinition Width="56" />
+                            <ColumnDefinition Width="80" />
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Grid.Column="0" Text="TAG" Style="{StaticResource TableHeader}" Margin="0,0,10,0" />
+                        <TextBlock Grid.Column="1" Text="AGENT" Style="{StaticResource TableHeader}" Margin="0,0,10,0" />
+                        <TextBlock Grid.Column="2" Text="DIR" Style="{StaticResource TableHeader}" Margin="0,0,10,0" />
+                        <TextBlock Grid.Column="3" Text="PROTO" Style="{StaticResource TableHeader}" Margin="0,0,10,0" />
+                        <TextBlock Grid.Column="4" Text="ENDPOINT" Style="{StaticResource TableHeader}" Margin="0,0,10,0" />
+                        <TextBlock Grid.Column="5" Text="STATE" Style="{StaticResource TableHeader}" Margin="0,0,10,0" />
+                        <TextBlock Grid.Column="6" Text="SCORE" Style="{StaticResource TableHeader}" Margin="0,0,10,0" />
+                        <TextBlock Grid.Column="7" Text="SEEN" Style="{StaticResource TableHeader}" />
+                    </Grid>
+                </Border>
+
+                <Border Grid.Row="3" Style="{StaticResource Card}" Margin="0,8,0,0" Padding="0">
+                    <Grid>
+                        <Grid.Resources>
+                            <DataTemplate x:Key="TrafficRowTemplate">
+                                <Border Padding="12,7"
+                                        BorderBrush="{DynamicResource LineSoftBrush}"
+                                        BorderThickness="0,0,0,1"
+                                        ToolTip="{Binding Detail}">
+                                    <Grid>
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="92" />
+                                            <ColumnDefinition Width="140" />
+                                            <ColumnDefinition Width="64" />
+                                            <ColumnDefinition Width="70" />
+                                            <ColumnDefinition Width="*" />
+                                            <ColumnDefinition Width="96" />
+                                            <ColumnDefinition Width="56" />
+                                            <ColumnDefinition Width="80" />
+                                        </Grid.ColumnDefinitions>
+
+                                        <TextBlock Grid.Column="0"
+                                                   Text="{Binding Tag}"
+                                                   FontSize="10"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{Binding TagBrush}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,10,0" />
+
+                                        <TextBlock Grid.Column="1"
+                                                   Text="{Binding Agent}"
+                                                   FontSize="11.5"
+                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,10,0" />
+
+                                        <TextBlock Grid.Column="2"
+                                                   Text="{Binding Direction}"
+                                                   FontSize="10.5"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,10,0" />
+
+                                        <TextBlock Grid.Column="3"
+                                                   Text="{Binding Protocol}"
+                                                   FontSize="10.5"
+                                                   Foreground="{DynamicResource TextMutedBrush}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,10,0" />
+
+                                        <TextBlock Grid.Column="4"
+                                                   Text="{Binding Endpoint}"
+                                                   FontSize="10.5"
+                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                   TextTrimming="CharacterEllipsis"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,10,0" />
+
+                                        <TextBlock Grid.Column="5"
+                                                   Text="{Binding State}"
+                                                   FontSize="10.5"
+                                                   Foreground="{DynamicResource TextMutedBrush}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,10,0" />
+
+                                        <TextBlock Grid.Column="6"
+                                                   Text="{Binding ScoreText}"
+                                                   FontSize="11"
+                                                   FontWeight="SemiBold"
+                                                   Foreground="{Binding TagBrush}"
+                                                   VerticalAlignment="Center"
+                                                   Margin="0,0,10,0" />
+
+                                        <TextBlock Grid.Column="7"
+                                                   Text="{Binding SeenText}"
+                                                   FontSize="10"
+                                                   Foreground="{DynamicResource TextMutedBrush}"
+                                                   VerticalAlignment="Center" />
+                                    </Grid>
+                                </Border>
+                            </DataTemplate>
+                        </Grid.Resources>
+
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding Traffic}" ItemTemplate="{StaticResource TrafficRowTemplate}" />
+                        </ScrollViewer>
+
+                        <TextBlock Text="Collecting traffic…"
+                                   HorizontalAlignment="Center"
+                                   VerticalAlignment="Center">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock" BasedOn="{StaticResource Caption}">
+                                    <Setter Property="Visibility" Value="Collapsed" />
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasTraffic}" Value="False">
+                                            <Setter Property="Visibility" Value="Visible" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+                    </Grid>
+                </Border>
+            </Grid>
+            <!-- Alerts raised by the URL rules -->
+            <Grid Margin="20,16,20,14"
+                  Visibility="{Binding IsChecked, ElementName=AlertsTab, Converter={StaticResource BoolToVis}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Text="Alerts" Style="{StaticResource SectionTitle}" FontSize="17" />
+                        <TextBlock Text="{Binding UrlAlertsSummary}"
+                                   Style="{StaticResource Caption}"
+                                   Margin="0,4,0,0" />
+                    </StackPanel>
+
+                    <Border Background="{DynamicResource SubtlePillBrush}"
+                            CornerRadius="5"
+                            Padding="7,2"
+                            HorizontalAlignment="Right"
+                            VerticalAlignment="Top">
+                        <TextBlock Text="local heuristics · no reputation service"
+                                   FontSize="10"
+                                   Foreground="{DynamicResource TextMutedBrush}" />
+                    </Border>
+                </Grid>
+
+                <Border Grid.Row="1" Style="{StaticResource Card}" Margin="0,14,0,0" Padding="0,0,0,6">
+                    <Grid>
+                        <ScrollViewer VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding UrlAlerts}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Padding="14,11"
+                                                BorderBrush="{DynamicResource LineSoftBrush}"
+                                                BorderThickness="0,0,0,1">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="Auto" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <StackPanel Grid.Column="0" Margin="0,0,16,0">
+                                                    <StackPanel Orientation="Horizontal">
+                                                        <Ellipse Width="6"
+                                                                 Height="6"
+                                                                 Fill="{Binding SeverityBrush}"
+                                                                 VerticalAlignment="Center"
+                                                                 Margin="0,0,7,0" />
+                                                        <TextBlock Text="{Binding Host}"
+                                                                   FontSize="12.5"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                                                   TextTrimming="CharacterEllipsis"
+                                                                   VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding SeverityText}"
+                                                                   FontSize="10"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="{Binding SeverityBrush}"
+                                                                   Margin="8,0,0,0"
+                                                                   VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding ScoreText, StringFormat=score {0}}"
+                                                                   FontSize="10"
+                                                                   Foreground="{DynamicResource TextMutedBrush}"
+                                                                   Margin="6,0,0,0"
+                                                                   VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding Process}"
+                                                                   FontSize="10"
+                                                                   Foreground="{DynamicResource TextMutedBrush}"
+                                                                   Margin="10,0,0,0"
+                                                                   VerticalAlignment="Center" />
+                                                        <TextBlock Text="{Binding ReputationText}"
+                                                                   FontSize="10"
+                                                                   FontWeight="SemiBold"
+                                                                   Foreground="{DynamicResource TextSecondaryBrush}"
+                                                                   ToolTip="{Binding ReputationDetail}"
+                                                                   Margin="10,0,0,0"
+                                                                   VerticalAlignment="Center" />
+                                                    </StackPanel>
+
+                                                    <TextBlock Text="{Binding Url}"
+                                                               FontSize="10.5"
+                                                               Foreground="{DynamicResource TextSecondaryBrush}"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               Margin="13,4,0,0" />
+
+                                                    <TextBlock Text="{Binding Reasons}"
+                                                               Style="{StaticResource Caption}"
+                                                               TextTrimming="CharacterEllipsis"
+                                                               Margin="13,2,0,0" />
+
+                                                    <TextBlock Text="{Binding SeenText}"
+                                                               FontSize="10"
+                                                               Foreground="{DynamicResource TextMutedBrush}"
+                                                               Margin="13,3,0,0" />
+                                                </StackPanel>
+
+                                                <StackPanel Grid.Column="1"
+                                                            Orientation="Horizontal"
+                                                            VerticalAlignment="Center">
+                                                    <Button Content="Copy"
+                                                            Style="{StaticResource GhostButton}"
+                                                            Padding="10,4"
+                                                            FontSize="11"
+                                                            Margin="0,0,6,0"
+                                                            Command="{Binding DataContext.CopyAlertCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}" />
+                                                    <Button Content="Dismiss"
+                                                            Style="{StaticResource GhostButton}"
+                                                            Padding="10,4"
+                                                            FontSize="11"
+                                                            Margin="0,0,6,0"
+                                                            Command="{Binding DataContext.DismissAlertCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}" />
+                                                    <Button Content="Whitelist"
+                                                            Style="{StaticResource GhostButton}"
+                                                            Padding="10,4"
+                                                            FontSize="11"
+                                                            Command="{Binding DataContext.WhitelistAlertCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}" />
+                                                </StackPanel>
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+
+                        <Border>
+                            <Border.Style>
+                                <Style TargetType="Border">
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding HasUrlAlerts}" Value="True">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </Border.Style>
+                            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                                <TextBlock Text="&#xE73E;"
+                                           FontFamily="{StaticResource GlyphFont}"
+                                           FontSize="26"
+                                           HorizontalAlignment="Center"
+                                           Foreground="{DynamicResource TextMutedBrush}" />
+                                <TextBlock Text="No suspicious addresses"
+                                           FontSize="13"
+                                           FontWeight="SemiBold"
+                                           HorizontalAlignment="Center"
+                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                           Margin="0,10,0,0" />
+                                <TextBlock Text="Pages you open are scored locally. Anything above the threshold lands here with its reasons."
+                                           Style="{StaticResource Caption}"
+                                           HorizontalAlignment="Center"
+                                           Margin="0,4,0,0" />
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
+            </Grid>
+
+            <!-- Rules: how suspicious addresses are scored -->
+            <Grid Margin="20,16,20,14"
+                  Visibility="{Binding IsChecked, ElementName=RulesTab, Converter={StaticResource BoolToVis}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <StackPanel>
+                    <TextBlock Text="Rules" Style="{StaticResource SectionTitle}" FontSize="17" />
+                    <TextBlock Text="Every decision is made on this machine: no URL is sent anywhere."
+                               Style="{StaticResource Caption}"
+                               Margin="0,4,0,0" />
+
+                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                        <RadioButton x:Name="RuleDetectionsSection"
+                                     GroupName="RuleSections"
+                                     IsChecked="True"
+                                     Style="{StaticResource SectionTab}"
+                                     Content="Detections" />
+                        <RadioButton x:Name="RuleSourcesSection"
+                                     GroupName="RuleSections"
+                                     Style="{StaticResource SectionTab}"
+                                     Content="Sources" />
+                        <RadioButton x:Name="RuleReputationSection"
+                                     GroupName="RuleSections"
+                                     Style="{StaticResource SectionTab}"
+                                     Content="Reputation" />
+                    </StackPanel>
+                </StackPanel>
+
+
+                <!-- Every detector and its weight -->
+                <Border Grid.Row="1"
+                        Margin="0,12,0,0"
+                        Style="{StaticResource Card}"
+                        Visibility="{Binding IsChecked, ElementName=RuleDetectionsSection, Converter={StaticResource BoolToVis}}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <StackPanel>
+                            <TextBlock Text="Detectors"
+                                       Style="{StaticResource SectionTitle}" />
+                            <TextBlock Text="A URL is reported to Alerts at 50 points. Strong single signals (credentials trick, brand lookalike, disguised executable) reach that on their own."
+                                       Style="{StaticResource Caption}"
+                                       Margin="0,4,0,0" />
+                        </StackPanel>
+
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,12,0,0">
+                            <ItemsControl ItemsSource="{Binding DetectionRules}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Padding="0,8"
+                                                BorderBrush="{DynamicResource LineSoftBrush}"
+                                                BorderThickness="0,0,0,1">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="46" />
+                                                    <ColumnDefinition Width="220" />
+                                                    <ColumnDefinition Width="*" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBlock Grid.Column="0"
+                                                           Text="{Binding WeightText}"
+                                                           FontSize="11.5"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{DynamicResource TextSecondaryBrush}"
+                                                           VerticalAlignment="Center" />
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding Title}"
+                                                           FontSize="12"
+                                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           VerticalAlignment="Center"
+                                                           Margin="0,0,12,0" />
+                                                <TextBlock Grid.Column="2"
+                                                           Text="{Binding Detail}"
+                                                           FontSize="10.5"
+                                                           Foreground="{DynamicResource TextMutedBrush}"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           VerticalAlignment="Center" />
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+
+                <!-- What the scanner can and cannot see -->
+                <Border Grid.Row="1"
+                        Margin="0,12,0,0"
+                        Style="{StaticResource Card}"
+                        Visibility="{Binding IsChecked, ElementName=RuleSourcesSection, Converter={StaticResource BoolToVis}}">
+                    <StackPanel>
+                        <TextBlock Text="Where addresses come from" Style="{StaticResource SectionTitle}" />
+
+                        <TextBlock Text="Browser address bar (UI Automation)"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                   Margin="0,12,0,0" />
+                        <TextBlock Text="The active tab of every open browser window, refreshed every few seconds. Titles and addresses only; no history files and nothing leaves the machine."
+                                   Style="{StaticResource Caption}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,3,0,0" />
+
+                        <TextBlock Text="What is not covered yet"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                   Margin="0,14,0,0" />
+                        <TextBlock Text="Every TCP and UDP socket — any port, any process — is listed in the Traffic tab. ICMP has no socket entry, so pings appear only as machine-wide echo counters. Connections shorter than half a second between samples, and traffic from another machine, need a packet driver to be captured."
+                                   Style="{StaticResource Caption}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,3,0,0" />
+
+                        <TextBlock Text="Privacy"
+                                   FontSize="12"
+                                   FontWeight="SemiBold"
+                                   Foreground="{DynamicResource TextPrimaryBrush}"
+                                   Margin="0,14,0,0" />
+                        <TextBlock Text="Scoring is local and offline. Whitelisted hosts are remembered in settings.json under %LocalAppData%\DoorNet."
+                                   Style="{StaticResource Caption}"
+                                   TextWrapping="Wrap"
+                                   Margin="0,3,0,0" />
+                    </StackPanel>
+                </Border>
+
+                <!-- Optional reputation lookups -->
+                <Border Grid.Row="1"
+                        Margin="0,12,0,0"
+                        Style="{StaticResource Card}"
+                        Visibility="{Binding IsChecked, ElementName=RuleReputationSection, Converter={StaticResource BoolToVis}}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto" />
+                            <RowDefinition Height="*" />
+                        </Grid.RowDefinitions>
+
+                        <StackPanel>
+                            <TextBlock Text="Reputation (VirusTotal)"
+                                       Style="{StaticResource SectionTitle}" />
+                            <TextBlock Text="{Binding ReputationStatusText}"
+                                       Style="{StaticResource Caption}"
+                                       Margin="0,4,0,0" />
+                            <TextBlock Text="Only hosts that already look suspicious are looked up — never full URLs, never private addresses. A verdict adds its own weight to the score (up to +60), results are cached for a day, and requests are spaced out to respect the free tier. Remove the key to stay fully offline."
+                                       Style="{StaticResource Caption}"
+                                       TextWrapping="Wrap"
+                                       Margin="0,8,0,0" />
+
+                            <TextBlock Text="Add or change the key in Settings → VirusTotal."
+                                       Style="{StaticResource Caption}"
+                                       FontSize="10"
+                                       Margin="0,12,0,0" />
+                        </StackPanel>
+
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,12,0,0">
+                            <ItemsControl ItemsSource="{Binding Reputations}">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <Border Padding="0,8"
+                                                BorderBrush="{DynamicResource LineSoftBrush}"
+                                                BorderThickness="0,0,0,1">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="220" />
+                                                    <ColumnDefinition Width="150" />
+                                                    <ColumnDefinition Width="*" />
+                                                    <ColumnDefinition Width="86" />
+                                                </Grid.ColumnDefinitions>
+
+                                                <TextBlock Grid.Column="0"
+                                                           Text="{Binding Target}"
+                                                           FontSize="12"
+                                                           Foreground="{DynamicResource TextPrimaryBrush}"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           VerticalAlignment="Center"
+                                                           Margin="0,0,12,0" />
+                                                <TextBlock Grid.Column="1"
+                                                           Text="{Binding Summary}"
+                                                           FontSize="11"
+                                                           FontWeight="SemiBold"
+                                                           Foreground="{Binding SeverityBrush}"
+                                                           VerticalAlignment="Center"
+                                                           Margin="0,0,12,0" />
+                                                <TextBlock Grid.Column="2"
+                                                           Text="{Binding Detail}"
+                                                           FontSize="10.5"
+                                                           Foreground="{DynamicResource TextMutedBrush}"
+                                                           TextTrimming="CharacterEllipsis"
+                                                           VerticalAlignment="Center"
+                                                           Margin="0,0,12,0" />
+                                                <TextBlock Grid.Column="3"
+                                                           Text="{Binding LookedUpText}"
+                                                           FontSize="10"
+                                                           Foreground="{DynamicResource TextMutedBrush}"
+                                                           VerticalAlignment="Center" />
+                                            </Grid>
+                                        </Border>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+                    </Grid>
+                </Border>
+            </Grid>
+
             <Grid Margin="20,16,20,14"
                   Visibility="{Binding IsChecked, ElementName=ActionsTab, Converter={StaticResource BoolToVis}}">
                     <Grid.RowDefinitions>
@@ -1370,6 +1987,127 @@
                                        Margin="0,4,0,0" />
                         </StackPanel>
                     </Border>
+            </Grid>
+
+            <!-- Settings: local preferences and the optional VirusTotal key -->
+            <Grid Margin="20,16,20,14"
+                  Visibility="{Binding IsChecked, ElementName=SettingsTab, Converter={StaticResource BoolToVis}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto" />
+                    <RowDefinition Height="*" />
+                </Grid.RowDefinitions>
+
+                <StackPanel>
+                    <TextBlock Text="Settings" Style="{StaticResource SectionTitle}" FontSize="17" />
+                    <TextBlock Text="Everything here is stored on this machine, in %LocalAppData%\DoorNet\settings.json."
+                               Style="{StaticResource Caption}"
+                               Margin="0,4,0,0" />
+                </StackPanel>
+
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Margin="0,14,0,0">
+                    <StackPanel>
+
+                        <Border Style="{StaticResource Card}">
+                            <StackPanel>
+                                <TextBlock Text="VirusTotal" Style="{StaticResource SectionTitle}" />
+                                <TextBlock Text="{Binding ReputationStatusText}"
+                                           Style="{StaticResource Caption}"
+                                           Margin="0,4,0,0" />
+                                <TextBlock Text="Optional. When a key is present, hosts that already look suspicious are checked against VirusTotal and the verdict adds up to +60 to their score. The key comes from here first, then the VIRUSTOTAL_API_KEY environment variable, then .env."
+                                           Style="{StaticResource Caption}"
+                                           TextWrapping="Wrap"
+                                           Margin="0,8,0,0" />
+
+                                <Grid Margin="0,12,0,0">
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="*" />
+                                        <ColumnDefinition Width="Auto" />
+                                        <ColumnDefinition Width="Auto" />
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBox Grid.Column="0"
+                                             Style="{StaticResource Input}"
+                                             Text="{Binding ApiKeyInput, UpdateSourceTrigger=PropertyChanged}"
+                                             ToolTip="Paste the VirusTotal API key. It is saved locally and never shown again in full." />
+                                    <Button Grid.Column="1"
+                                            Content="Save key"
+                                            Style="{StaticResource GhostButton}"
+                                            Padding="12,5"
+                                            FontSize="11"
+                                            Margin="8,0,6,0"
+                                            Command="{Binding SaveApiKeyCommand}" />
+                                    <Button Grid.Column="2"
+                                            Content="Remove"
+                                            Style="{StaticResource GhostButton}"
+                                            Padding="12,5"
+                                            FontSize="11"
+                                            Command="{Binding ClearApiKeyCommand}" />
+                                </Grid>
+
+                                <TextBlock Text="Only suspicious hosts are looked up — never full URLs, never private addresses. Results are cached for a day and requests are spaced to respect the free tier."
+                                           Style="{StaticResource Caption}"
+                                           FontSize="10"
+                                           TextWrapping="Wrap"
+                                           Margin="0,6,0,0" />
+                            </StackPanel>
+                        </Border>
+
+                        <Border Style="{StaticResource Card}" Margin="0,12,0,0">
+                            <StackPanel>
+                                <TextBlock Text="Whitelisted hosts" Style="{StaticResource SectionTitle}" />
+                                <TextBlock Text="Addresses you marked as safe from an alert. They are never scored again."
+                                           Style="{StaticResource Caption}"
+                                           Margin="0,4,0,0" />
+
+                                <ItemsControl ItemsSource="{Binding WhitelistedHosts}" Margin="0,8,0,0">
+                                    <ItemsControl.ItemTemplate>
+                                        <DataTemplate>
+                                            <Border Padding="0,6"
+                                                    BorderBrush="{DynamicResource LineSoftBrush}"
+                                                    BorderThickness="0,0,0,1">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="*" />
+                                                        <ColumnDefinition Width="Auto" />
+                                                    </Grid.ColumnDefinitions>
+
+                                                    <TextBlock Grid.Column="0"
+                                                               Text="{Binding}"
+                                                               FontSize="11.5"
+                                                               Foreground="{DynamicResource TextPrimaryBrush}"
+                                                               VerticalAlignment="Center" />
+
+                                                    <Button Grid.Column="1"
+                                                            Content="Remove"
+                                                            Style="{StaticResource GhostButton}"
+                                                            Padding="10,3"
+                                                            FontSize="10.5"
+                                                            Command="{Binding DataContext.RemoveWhitelistedHostCommand, RelativeSource={RelativeSource AncestorType=Window}}"
+                                                            CommandParameter="{Binding}" />
+                                                </Grid>
+                                            </Border>
+                                        </DataTemplate>
+                                    </ItemsControl.ItemTemplate>
+                                </ItemsControl>
+
+                                <TextBlock Text="No hosts whitelisted yet."
+                                           Margin="0,6,0,0">
+                                    <TextBlock.Style>
+                                        <Style TargetType="TextBlock" BasedOn="{StaticResource Caption}">
+                                            <Setter Property="Visibility" Value="Collapsed" />
+                                            <Style.Triggers>
+                                                <DataTrigger Binding="{Binding HasWhitelistedHosts}" Value="False">
+                                                    <Setter Property="Visibility" Value="Visible" />
+                                                </DataTrigger>
+                                            </Style.Triggers>
+                                        </Style>
+                                    </TextBlock.Style>
+                                </TextBlock>
+                            </StackPanel>
+                        </Border>
+
+                    </StackPanel>
+                </ScrollViewer>
             </Grid>
         </Grid>
 

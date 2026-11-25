@@ -175,3 +175,95 @@ public static class AccentPalette
         return brush;
     }
 }
+
+/// <summary>One scored address in the Rules → Analysis list.</summary>
+public sealed record UrlFindingRow(
+    string Key,
+    string Url,
+    string Host,
+    string Process,
+    string ScoreText,
+    string VerdictText,
+    string SeverityText,
+    Brush SeverityBrush,
+    string Reasons,
+    string LastSeenText,
+    bool IsSuspicious);
+
+/// <summary>One suspicious address raised to the Alerts tab.</summary>
+public sealed record UrlAlertRow(
+    string Key,
+    string Host,
+    string Url,
+    string Process,
+    string ScoreText,
+    string SeverityText,
+    Brush SeverityBrush,
+    string Reasons,
+    string SeenText,
+    string ReputationText,
+    string ReputationDetail);
+
+/// <summary>One detector shown in the Rules → Detections list.</summary>
+public sealed record DetectionRuleRow(string Id, string Title, string WeightText, string Detail);
+
+/// <summary>Colours shared by the threat rows; scores are advisory, so they stay readable.</summary>
+public static class SeverityBrushes
+{
+    public static readonly Brush Critical = Frozen("#F27983");
+    public static readonly Brush High = Frozen("#F5B95C");
+    public static readonly Brush Medium = Frozen("#5B8FB9");
+    public static readonly Brush Low = Frozen("#5A6C7E");
+
+    public static Brush For(Core.Threats.ThreatSeverity severity) => severity switch
+    {
+        Core.Threats.ThreatSeverity.Critical => Critical,
+        Core.Threats.ThreatSeverity.High => High,
+        Core.Threats.ThreatSeverity.Medium => Medium,
+        _ => Low
+    };
+
+    public static Brush For(Core.Threats.UrlCategory category) => category switch
+    {
+        Core.Threats.UrlCategory.Danger => Critical,
+        Core.Threats.UrlCategory.Suspicious => High,
+        Core.Threats.UrlCategory.Watch => Medium,
+        _ => Low
+    };
+
+    private static Brush Frozen(string hex)
+    {
+        var brush = new SolidColorBrush((Color)ColorConverter.ConvertFromString(hex));
+        brush.Freeze();
+        return brush;
+    }
+}
+
+/// <summary>One reputation lookup, shown in Rules → Reputation.</summary>
+public sealed record ReputationRow(
+    string Target,
+    string Summary,
+    string Detail,
+    string LookedUpText,
+    Brush SeverityBrush);
+
+/// <summary>One line in the Traffic tab: a socket, a scored page, or the ICMP line.</summary>
+public sealed record TrafficRow(
+    string Key,
+    string Tag,
+    Brush TagBrush,
+    string Agent,
+    string Direction,
+    string Protocol,
+    string Endpoint,
+    string State,
+    string Detail,
+    string ScoreText,
+    string SeenText,
+    bool IsSuspicious);
+
+/// <summary>One entry in the Traffic protocol filter, with the count of matching rows.</summary>
+public sealed record ProtocolFilterOption(string Key, string Label, int Count)
+{
+    public string Display => Count > 0 ? $"{Label} ({Count})" : Label;
+}
